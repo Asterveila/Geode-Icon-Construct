@@ -3,9 +3,8 @@
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/binding/GameManager.hpp>
 #include <Geode/binding/SimplePlayer.hpp>
-#include <hiimjustin000.more_icons/include/MoreIcons.hpp>
+#include <hiimjustin000.more_icons/include/MoreIconsV2.hpp>
 #include <Geode/ui/GeodeUI.hpp>
-#include <random>
 
 // a girl gotta be honest
 // copilot helped me figure out how tf to do the auto plist editing feature LOL
@@ -17,7 +16,7 @@
 // not to make ur entire fucking job
 // :thumbsup:
 
-std::string infoStr = R"(# Icon Workbench (ENG)
+constexpr const char* infoStr = R"(# Icon Workbench (ENG)
 Welcome to the ***Icon Workbench Menu***!!
 In here, you will find all the mod's tools to assist you with your Icon Creating process! You've probably already read the mod's info page, so i'll just give you some extra guidance on what everything here does!
 
@@ -69,35 +68,37 @@ En la esquina superior derecha de la ventana principal hay un pequeno menu (que 
 
 El boton **Renderizar Icono** renderizara inmediatamente tu vista previa en vivo tal y como esta en su estado actual a una imagen PNG. Se guardara en la carpeta de renderizados que hayas elegido, que puedes personalizar a traves del menu de configuracion del mod. Por defecto, se guardaran en una carpeta «Renders» dentro de la carpeta de configuracion del mod.)";
 
-std::string whyStr = R"(## Why aren't vanilla icons supported? (ENG)
+constexpr const char* whyStr = R"(## Why aren't vanilla icons supported? (ENG)
 
-The **MoreIcons** mod provides simple and quick ways to know various things this mod heavily utilizes:
+The **More Icons** mod provides simple and quick ways to know various things this mod heavily utilizes:
 
 - Where is the .plist file for an Icon located
 - A full list of frame names for an Icon
 - The Icon's name
 - When necessary, the Texture Pack's ID/Name
 
-Fetching these things without MoreIcons for Vanilla Icons would get very annoying VERY quickly. Therefore, the mod relies on MoreIcons to function properly.
+Fetching these things without More Icons for Vanilla Icons would get very annoying VERY quickly. Therefore, the mod relies on More Icons to function properly.
 
-The mod's main target audience is Icon **Creators** anyway, so, most creators are probably using MoreIcons to load their icons without touching their vanilla icon list (Or should be, at least. Trust me, it's a whoooole 'nother world.)
+The mod's main target audience is Icon **Creators** anyway, so, most creators are probably using More Icons to load their icons without touching their vanilla icon list (Or should be, at least. Trust me, it's a whoooole 'nother world.)
 
-In any case, if you're making a Vanilla Icon Pack, i'd recommend enabling MoreIcons' "Load from Traditional Icon Packs" setting, at least temporarily. This will load icons from Vanilla icon packs as if they were MoreIcons added Icons, and therefore, you SHOULD be able to edit them via Icon Construct. From my testing this DOES work, so it should for you too!
+In any case, if you're making a Vanilla Icon Pack, i'd recommend enabling More Icons' "Load from Traditional Icon Packs" setting, at least temporarily. This will load icons from Vanilla icon packs as if they were More Icons added Icons, and therefore, you SHOULD be able to edit them via Icon Construct. From my testing this DOES work, so it should for you too!
 
 ## ¿Por que no se admiten los iconos vanilla? (ESP) [Traducido con DeepL]
 
-El mod **MoreIcons** proporciona formas sencillas y rapidas de conocer diversos aspectos de los iconos que este mod utiliza en gran medida:
+El mod **More Icons** proporciona formas sencillas y rapidas de conocer diversos aspectos de los iconos que este mod utiliza en gran medida:
 
 - Donde se encuentra el archivo .plist de un icono
 - Una lista completa de los nombres de cada frame/parte de un icono
 - El nombre del icono
 - Cuando sea necesario, el ID/nombre del Texture Pack
 
-Obtener esta informacion sin MoreIcons para los iconos predeterminados resultaria muy molesto MUY rapidamente. Por lo tanto, el mod depende de MoreIcons para funcionar correctamente.
+Obtener esta informacion sin More Icons para los iconos predeterminados resultaria muy molesto MUY rapidamente. Por lo tanto, el mod depende de More Icons para funcionar correctamente.
 
-De todos modos, el publico principal al que se dirige el mod son los **creadores** de iconos, por lo que es probable que la mayoria de ellos utilicen MoreIcons para cargar sus iconos sin tocar su lista de iconos predeterminados (o al menos **deberian** de hacerlo. Creeme, es otro cantar).
+De todos modos, el publico principal al que se dirige el mod son los **creadores** de iconos, por lo que es probable que la mayoria de ellos utilicen More Icons para cargar sus iconos sin tocar su lista de iconos predeterminados (o al menos **deberian** de hacerlo. Creeme, es otro cantar).
 
-En cualquier caso, si estas creando un paquete de iconos Vanilla, te recomiendo que actives la configuracion "Cargar desde paquetes de iconos tradicionales" de MoreIcons, al menos temporalmente. Esto cargara los iconos de los paquetes de iconos Vanilla como si fueran iconos anadidos por MoreIcons y, por lo tanto, DEBERiAS poder editarlos a traves de Icon Construct. Segun mis pruebas, esto FUNCIONA, ¡asi que tambien deberia funcionar para ti!)";
+En cualquier caso, si estas creando un paquete de iconos Vanilla, te recomiendo que actives la configuracion "Cargar desde paquetes de iconos tradicionales" de More Icons, al menos temporalmente. Esto cargara los iconos de los paquetes de iconos Vanilla como si fueran iconos anadidos por More Icons y, por lo tanto, DEBERiAS poder editarlos a traves de Icon Construct. Segun mis pruebas, esto FUNCIONA, ¡asi que tambien deberia funcionar para ti!)";
+
+constexpr int FALLBACK_TAG = 105871529;
 
 std::string getCurrentTimeString() {
     auto now = std::chrono::system_clock::now();
@@ -141,7 +142,7 @@ void updatePreviewIcon(SimplePlayer* player, IconType iconType) {
             break;
     }
     
-    MoreIcons::updateSimplePlayer(player, iconType);
+    more_icons::updateSimplePlayer(player, iconType);
     
     player->setColor(manager->colorForIdx(manager->getPlayerColor()));
     player->setSecondColor(manager->colorForIdx(manager->getPlayerColor2()));
@@ -175,8 +176,8 @@ CCSize getHitboxSizeForIconType(IconType iconType) {
 std::string getRealFrameName(const std::string& fullFrameName) {
     std::string result = fullFrameName;
     
-    const std::string moreIconsPrefix = "hiimjustin000.more_icons/";
-    if (utils::string::startsWith(result, moreIconsPrefix)) result = result.substr(moreIconsPrefix.length());
+    constexpr std::string_view moreIconsPrefix = "hiimjustin000.more_icons/";
+    if (result.starts_with(moreIconsPrefix)) result = result.substr(moreIconsPrefix.length());
     
     size_t colonPos = result.find(':');
     if (colonPos != std::string::npos) result = result.substr(colonPos + 1);
@@ -191,7 +192,7 @@ protected:
     bool m_isXAxis = true;
     
     bool setup(std::function<void(float)> callback) override {
-        m_callback = callback;
+        m_callback = std::move(callback);
         
         auto winSize = this->m_mainLayer->getContentSize();
         
@@ -268,7 +269,7 @@ public:
     static AddValuePopup* create(std::function<void(float)> callback, bool isXAxis) {
         auto ret = new AddValuePopup();
         ret->m_isXAxis = isXAxis;
-        if (ret->initAnchored(240.0f, 140.0f, callback)) {
+        if (ret->initAnchored(240.0f, 140.0f, std::move(callback))) {
             ret->autorelease();
             return ret;
         }
@@ -292,7 +293,7 @@ bool IconOffsetEditorPopup::setup() {
 
     auto manager = GameManager::sharedState();
     m_currentIconType = manager->m_playerIconType;
-    IconInfo* icInfo = MoreIcons::getIcon(m_currentIconType);
+    IconInfo* icInfo = more_icons::getIcon(m_currentIconType);
     auto size = this->m_mainLayer->getContentSize();
     auto popupSize = this->getContentSize();
     bool isRobotOrSpider = (m_currentIconType == IconType::Robot || m_currentIconType == IconType::Spider);
@@ -978,7 +979,7 @@ bool IconOffsetEditorPopup::setup() {
                 m_currentFrameName = m_frameNames[0];
             }
         } else {
-            log::error("couldn't get MoreIcons frameNames");
+            log::error("couldn't get More Icons frameNames");
             return true;
         }
     }
@@ -1023,7 +1024,7 @@ bool IconOffsetEditorPopup::setup() {
         for (int i = 0; i < m_frameNames.size(); i++) {
             const auto& frameName = m_frameNames[i];
             auto frame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(frameName.c_str());
-            if (!frame) {
+            if (!frame || frame->getTag() == FALLBACK_TAG) {
                 log::warn("couldn't find frame: {}", frameName);
                 continue;
             }
@@ -1163,7 +1164,7 @@ std::string IconOffsetEditorPopup::getCurrentRealFrameName() {
     
     auto rect = frame->getRect();
     
-    auto icInfo = MoreIcons::getIcon(m_currentIconType);
+    auto icInfo = more_icons::getIcon(m_currentIconType);
     if (!icInfo || icInfo->frameNames.empty()) {
         log::warn("Couldn't get IconInfo or frameNames is empty");
         return "";
@@ -1172,7 +1173,7 @@ std::string IconOffsetEditorPopup::getCurrentRealFrameName() {
     for (const auto& fullFrameName : icInfo->frameNames) {
         auto cachedFrame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(fullFrameName.c_str());
         
-        if (!cachedFrame) {
+        if (!cachedFrame || cachedFrame->getTag() == FALLBACK_TAG) {
             continue;
         }
         
@@ -1214,7 +1215,7 @@ void IconOffsetEditorPopup::updateInputFields() {
 
     if (m_currentIconType == IconType::Robot || m_currentIconType == IconType::Spider) {
         auto frame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(m_currentFrameName.c_str());
-        if (frame) {
+        if (frame && frame->getTag() != FALLBACK_TAG) {
             auto offset = frame->getOffsetInPixels();
             m_inputX->setString(fmt::format("{:.6g}", offset.x));
             m_inputY->setString(fmt::format("{:.6g}", offset.y));
@@ -1587,7 +1588,7 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
         return;
     }
 
-    auto icInfo = MoreIcons::getIcon(m_currentIconType);
+    auto icInfo = more_icons::getIcon(m_currentIconType);
     if (!icInfo) {
         FLAlertLayer::create("Error", "<cr>Couldn't get icon info!</c>", "OK")->show();
         return;
@@ -1600,7 +1601,7 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
         return;
     }
 
-    m_logStream.str("");
+    m_logStream.clear();
     addToLog("## Plist Editing Process", 0);
     
     if (remapNames) {
@@ -1651,7 +1652,7 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
         addToLog("<cy>[REMAPPING]</c> Trying to find internal frame name in plist...", 2);
         
         // @geode-ignore(unknown-resource)
-        std::string searchPattern = "_001.png";
+        std::string_view searchPattern = "_001.png";
         if (m_currentIconType == IconType::Robot || m_currentIconType == IconType::Spider) searchPattern = "_01_001.png";
         size_t searchPos = plistContent.find(searchPattern);
 
@@ -1677,12 +1678,12 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
             addToLog("<cr>[ERROR]</c> Could not detect internal frame name from plist!", 2);
             addToLog("The plist may not contain any frames with the standard naming pattern.", 1);
             
-            std::string errorMsg = "## <cr>Internal Frame Name Not Found!</c>\n\n";
-            errorMsg += "Could not detect the internal frame name from the plist file.\n\n";
-            errorMsg += "<cp>This probably means:</c>\n";
-            errorMsg += "- Your icon's plist doesn't have any standard-named frames. (aka, `iconPart.png` instead of `iconPart_001.png`)\n";
-            errorMsg += "- Your plist's structure is corrupted or invalid.\n\n";
-            errorMsg += "**<cl>What do i do?</c>** - Try manually renaming the frames in your plist to match your icon's renamed name. Or, just manually change the offsets to whatever you found nice in the Workbench.";
+            constexpr const char* errorMsg = "## <cr>Internal Frame Name Not Found!</c>\n\n"
+                "Could not detect the internal frame name from the plist file.\n\n"
+                "<cp>This probably means:</c>\n"
+                "- Your icon's plist doesn't have any standard-named frames. (aka, `iconPart.png` instead of `iconPart_001.png`)\n"
+                "- Your plist's structure is corrupted or invalid.\n\n"
+                "**<cl>What do i do?</c>** - Try manually renaming the frames in your plist to match your icon's renamed name. Or, just manually change the offsets to whatever you found nice in the Workbench.";
             
             geode::MDPopup::create(
                 "Remapping Failed",
@@ -1778,32 +1779,32 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
 
     // no voy a traducir esto a la chingada
     if (!remapNames && notFoundCount > 0 && notFoundCount == m_modifiedOffsets.size()) {
-        std::stringstream retryMsg;
-        retryMsg << "# <cr>Frames Not Found.</c>\n\n";
-        retryMsg << "---";
-        retryMsg << "None of the frames you updated and were about to be changed were found in the plist file.\n\n";
-        retryMsg << "## <cy>This could be caused by a</c> <co>Renamed/Duplicate Icon</c>\n\n";
-        retryMsg << "If you've renamed this icon using More Icons' rename feature, the plist file still contains the old frame names, therefore, the mod isn't able to find the frames by searching for the icon's new name inside the plist file.\n\n";
-        retryMsg << "**For Example:**\n";
-        retryMsg << "- You renamed: `player_85` to `renamedtest`\n";
-        retryMsg << "- Construct is looking for: `renamedtest_001.png` to apply your changes.\n";
-        retryMsg << "- But, the plist file still has: `player_85_001.png`\n\n";
-        retryMsg << "### <cp>What Now?</co>\n\n";
-        retryMsg << "Click **Remap and Retry** to try and automatically find and use the internal frame names in your plist, instead of your icon's name.\n\n";
-        retryMsg << "Construct will then:\n";
-        retryMsg << "1. Try and find the first instance of a frame ending with `_001.png` in your plist.\n";
-        retryMsg << "2. Use this to try and find the icon's internal name. (e.g., `player_85_001.png` = `player_85`)\n";
-        retryMsg << "3. Replace your renamed name with the internal name.\n";
-        retryMsg << "4. Search for the correct frames to apply your changes.\n\n";
-        retryMsg << "<cy>**Note:**</c> If anything goes wrong, a backup of your icon's plist has been created at:\n";
-        retryMsg << "`" << backupPath << "`\n\n";
-        retryMsg << "So i'd recommend giving remapping a shot anyways.\n\n";
-        retryMsg << "### <cr>Frames that weren't found:</cr>\n\n";
+        fmt::memory_buffer retryMsg;
+        fmt::format_to(std::back_inserter(retryMsg), "# <cr>Frames Not Found.</c>\n\n");
+        fmt::format_to(std::back_inserter(retryMsg), "---");
+        fmt::format_to(std::back_inserter(retryMsg), "None of the frames you updated and were about to be changed were found in the plist file.\n\n");
+        fmt::format_to(std::back_inserter(retryMsg), "## <cy>This could be caused by a</c> <co>Renamed/Duplicate Icon</c>\n\n");
+        fmt::format_to(std::back_inserter(retryMsg), "If you've renamed this icon using More Icons' rename feature, the plist file still contains the old frame names, therefore, the mod isn't able to find the frames by searching for the icon's new name inside the plist file.\n\n");
+        fmt::format_to(std::back_inserter(retryMsg), "**For Example:**\n");
+        fmt::format_to(std::back_inserter(retryMsg), "- You renamed: `player_85` to `renamedtest`\n");
+        fmt::format_to(std::back_inserter(retryMsg), "- Construct is looking for: `renamedtest_001.png` to apply your changes.\n");
+        fmt::format_to(std::back_inserter(retryMsg), "- But, the plist file still has: `player_85_001.png`\n\n");
+        fmt::format_to(std::back_inserter(retryMsg), "### <cp>What Now?</co>\n\n");
+        fmt::format_to(std::back_inserter(retryMsg), "Click **Remap and Retry** to try and automatically find and use the internal frame names in your plist, instead of your icon's name.\n\n");
+        fmt::format_to(std::back_inserter(retryMsg), "Construct will then:\n");
+        fmt::format_to(std::back_inserter(retryMsg), "1. Try and find the first instance of a frame ending with `_001.png` in your plist.\n");
+        fmt::format_to(std::back_inserter(retryMsg), "2. Use this to try and find the icon's internal name. (e.g., `player_85_001.png` = `player_85`)\n");
+        fmt::format_to(std::back_inserter(retryMsg), "3. Replace your renamed name with the internal name.\n");
+        fmt::format_to(std::back_inserter(retryMsg), "4. Search for the correct frames to apply your changes.\n\n");
+        fmt::format_to(std::back_inserter(retryMsg), "<cy>**Note:**</c> If anything goes wrong, a backup of your icon's plist has been created at:\n");
+        fmt::format_to(std::back_inserter(retryMsg), "`{}`\n\n", backupPath);
+        fmt::format_to(std::back_inserter(retryMsg), "So i'd recommend giving remapping a shot anyways.\n\n");
+        fmt::format_to(std::back_inserter(retryMsg), "### <cr>Frames that weren't found:</cr>\n\n");
         for (const auto& frame : notFoundFrames) {
-            retryMsg << "- `" << frame << "`\n";
+            fmt::format_to(std::back_inserter(retryMsg), "- `{}`\n", frame);
         }
 
-        std::string retryMsgStr = retryMsg.str();
+        std::string retryMsgStr = fmt::to_string(retryMsg);
         
         geode::MDPopup::create(
             "Couldn't find Frames",
@@ -1837,7 +1838,7 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
         addToLog("<cr>**Error:**</c> No offsets updated on plist file.", 2);
         addToLog("Please check the failed updates above for details, and send the log in your bug report if you think this is a mod issue.", 0);
 
-        std::string finalLog = m_logStream.str();
+        std::string finalLog = fmt::to_string(m_logStream);
 
         geode::MDPopup::create(
             "Plist Save Failed",
@@ -1858,7 +1859,7 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
         addToLog("<cr>**Error:**</c> Failed to write to plist file.", 2);
         addToLog(fmt::format("**Error Details:**\n```\n{}\n```", writeResult.unwrapErr()), 0);
 
-        std::string finalLog = m_logStream.str();
+        std::string finalLog = fmt::to_string(m_logStream);
 
         geode::MDPopup::create(
             "Plist Save Failed",
@@ -1874,12 +1875,13 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
         return;
     }
 
+    more_icons::updateIcon(icInfo);
+
     addToLog("---", 2);
     addToLog("## <cg>Success!</c>", 2);
     addToLog(fmt::format("Plist file successfully updated with **{}** changes!", updatedCount), 2);
     addToLog(fmt::format("**Plist Path:**\n`{}`", plistPath), 1);
     addToLog(fmt::format("**Backup Path:**\n`{}`", backupPath), 1);
-    addToLog("<cy>Remember to reload textures to see the applied changes!</c>", 2);
     
     if (remapNames) {
         addToLog("---", 2);
@@ -1895,7 +1897,7 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
         addToLog(fmt::format("**Backup is saved to:** `{}`", backupPath), 1);
     }
 
-    std::string finalLog = m_logStream.str();
+    std::string finalLog = fmt::to_string(m_logStream);
 
     geode::MDPopup::create(
         "Plist Saved Successfully",
@@ -1913,8 +1915,8 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
 }
 
 void IconOffsetEditorPopup::addToLog(const std::string& logMsg, int newLines) {
-    for (int i = 0; i < newLines; ++i) m_logStream << "\n";
-    m_logStream << logMsg << "\n";
+    for (int i = 0; i < newLines; ++i) m_logStream.push_back('\n');
+    fmt::format_to(std::back_inserter(m_logStream), "{}\n", logMsg);
 }
 
 CCImage* IconOffsetEditorPopup::getIconImage() {
@@ -2009,7 +2011,7 @@ CCImage* IconOffsetEditorPopup::getIconImage() {
 }
 
 void IconOffsetEditorPopup::onRenderIcon(CCObject* sender) {
-    auto icInfo = MoreIcons::getIcon(m_currentIconType);
+    auto icInfo = more_icons::getIcon(m_currentIconType);
     if (!icInfo) {
         FLAlertLayer::create("Error", "Couldn't get icon info!", "aw :(")->show();
         return;
@@ -2090,7 +2092,7 @@ void IconOffsetEditorPopup::mapRobotSpiderSprites(CCNode* node) {
             for (const auto& frameName : m_frameNames) {
                 auto cachedFrame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(frameName.c_str());
                 
-                if (cachedFrame) {
+                if (cachedFrame && cachedFrame->getTag() != FALLBACK_TAG) {
                     auto cachedTexture = cachedFrame->getTexture();
                     if (!cachedTexture) {
                         log::warn("{}Cached frame has null texture: {}", indent, frameName);
@@ -2128,7 +2130,7 @@ void IconOffsetEditorPopup::mapRobotSpiderSprites(CCNode* node) {
             for (const auto& frameName : m_frameNames) {
                 auto cachedFrame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(frameName.c_str());
                 
-                if (cachedFrame) {
+                if (cachedFrame && cachedFrame->getTag() != FALLBACK_TAG) {
                     auto cachedTexture = cachedFrame->getTexture();
                     if (!cachedTexture) {
                         log::warn("{}Cached frame has null texture: {} - skippin to avoid crash, but please check ur icon...", indent, frameName);
@@ -2229,6 +2231,25 @@ void IconOffsetEditorPopup::onHitboxOpacityChanged(CCObject* sender) {
     
     if (m_hitboxOpacityLabel) m_hitboxOpacityLabel->setString(fmt::format("{}%", static_cast<int>(m_hitboxOpacity * 100)).c_str());
     if (m_showHitbox) drawHitbox();
+}
+
+void IconOffsetEditorPopup::onClose(CCObject* sender) {
+    Popup::onClose(sender);
+
+    if (auto garageLayer = static_cast<GJGarageLayer*>(CCDirector::sharedDirector()->getRunningScene()->getChildByID("GJGarageLayer"))) {
+        auto gameManager = GameManager::sharedState();
+        auto player1 = garageLayer->m_playerObject;
+        auto iconType1 = gameManager->m_playerIconType;
+        more_icons::updateSimplePlayer(player1, iconType1, false);
+
+        if (auto separateDualIcons = Loader::get()->getLoadedMod("weebify.separate_dual_icons")) {
+            auto player2 = static_cast<SimplePlayer*>(garageLayer->getChildByID("player2-icon"));
+            auto iconType2 = static_cast<IconType>(separateDualIcons->getSavedValue("lastmode", 0));
+            more_icons::updateSimplePlayer(player2, iconType2, true);
+        }
+
+        garageLayer->selectTab(garageLayer->m_iconType);
+    }
 }
 
 class $modify(OffsetEditorGarageLayer, GJGarageLayer) {

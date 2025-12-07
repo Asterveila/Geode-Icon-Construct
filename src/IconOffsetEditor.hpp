@@ -73,7 +73,7 @@ protected:
     std::vector<std::string> m_frameNames;
     std::string m_currentFrameName;
 
-    std::stringstream m_logStream;
+    fmt::memory_buffer m_logStream;
     
     void updatePreviewPlayer();
     void onPartSelected(CCObject* sender);
@@ -110,6 +110,7 @@ protected:
     void updateColor(cocos2d::ccColor4B const& color) override;
     void applyPreviewColors();
     CCMenuItemSpriteExtra* createColorPickerButton(const std::string& colorId, ccColor3B currentColor);
+    void onClose(CCObject* sender) override;
     
 public:
     static IconOffsetEditorPopup* create();

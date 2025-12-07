@@ -1,5 +1,5 @@
 {
-	"geode": "4.9.0",
+	"geode": "4.10.0",
 	"gd": {
 		"win": "2.2074",
 		"android": "2.2074",
@@ -60,7 +60,7 @@
 	"dependencies": {
 		"geode.node-ids": ">=v1.20.0",
 		"hiimjustin000.more_icons": {
-            "version": ">=v1.14.0",
+            "version": ">=v1.16.0",
             "importance": "required"
         }
 	}

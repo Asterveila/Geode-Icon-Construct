@@ -54,8 +54,9 @@
 	"version": "v1.3.0",
 	"developer": "Saritahhh",
 	"description": "All-in-one Utils for Icon Creators!",
+	"tags": ["interface", "utility"],
 	"links": {
-		"source": "https://github.com/DeepRsnanceX/Geode-Icon-Construct"
+		"source": "https://github.com/Asterveila/Geode-Icon-Construct"
 	},
 	"dependencies": {
 		"geode.node-ids": ">=v1.20.0",

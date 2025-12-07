@@ -1653,6 +1653,7 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
         
         // @geode-ignore(unknown-resource)
         std::string_view searchPattern = "_001.png";
+        // @geode-ignore(unknown-resource)
         if (m_currentIconType == IconType::Robot || m_currentIconType == IconType::Spider) searchPattern = "_01_001.png";
         size_t searchPos = plistContent.find(searchPattern);
 

@@ -19,6 +19,9 @@ The mod has various general utilities for Icon Creators, such as:
 - **Icon Renderer**: Once your icon's done, if you wanna show it off to the people quickly, you can click on the top left's *Camera Button* and immediately render your icon into a PNG image! Inside the mod's settings you can customize the folder your Renders are saved onto, as well as the background color your renders have! (If you want them to have one)
 - **Quick Addition/Substraction to Offsets**: Want to move your entire icon 7 pixels up, but all your offsets are all over the place and all of them are different? Are u as bad at math as the creator of this mod and can't spend a solid minute calculating what number to set? No problem! Clicking the little "+" buttons located next to the Text Inputs will open a small popup where you can input any number, positive or negative, and it'll add that number to the chosen offset!
 
+## Credits
+- [hiimjasmine000](https://github.com/hiimjasmine00): Internal code improvements/optimizations, updated to new More Icons API. Creator of the More Icons mod.
+
 ## Recommended mods
 Some recommended mods to use alongside Icon Construct are the following:
 

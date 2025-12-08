@@ -1,7 +1,7 @@
 # v1.3.0
-- Updated More Icons support to the new API version (Added by [hiimjasmine000](user:7466002))
-- Added Automatic Reloading after applying plist changes (Added by [hiimjasmine000](user:7466002))
-- Internal code optimizations and improvements (Added by [hiimjasmine000](user:7466002))
+- Updated More Icons support to the new API version (Added by [hiimjasmine00](user:7466002))
+- Added Automatic Reloading after applying plist changes (Added by [hiimjasmine00](user:7466002))
+- Internal code optimizations and improvements (Added by [hiimjasmine00](user:7466002))
 
 # v1.2.0
 - Added a setting to disable the Hitbox Preview's fill.

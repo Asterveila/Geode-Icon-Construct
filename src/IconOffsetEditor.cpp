@@ -3,18 +3,8 @@
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/binding/GameManager.hpp>
 #include <Geode/binding/SimplePlayer.hpp>
-#include <hiimjustin000.more_icons/include/MoreIconsV2.hpp>
+#include <hiimjustin000.more_icons/include/MoreIcons.hpp>
 #include <Geode/ui/GeodeUI.hpp>
-
-// a girl gotta be honest
-// copilot helped me figure out how tf to do the auto plist editing feature LOL
-// i was a little lost on some stuff and didn't wanna bother anyone else
-// modding be so fun then BAM
-// u have to write to a file ...
-// lesson of the day
-// use ai as a TOOL ppl
-// not to make ur entire fucking job
-// :thumbsup:
 
 constexpr const char* infoStr = R"(# Icon Workbench (ENG)
 Welcome to the ***Icon Workbench Menu***!!
@@ -185,13 +175,15 @@ std::string getRealFrameName(const std::string& fullFrameName) {
     return result;
 }
 
-class AddValuePopup : public geode::Popup<std::function<void(float)>> {
+// std::function<void(float)>
+class AddValuePopup : public Popup {
 protected:
     geode::TextInput* m_valueInput = nullptr;
     std::function<void(float)> m_callback;
     bool m_isXAxis = true;
     
-    bool setup(std::function<void(float)> callback) override {
+    bool init(std::function<void(float)> callback) {
+        if (!Popup::init(240.0f, 140.0f, "GJ_square01.png")) return false;
         m_callback = std::move(callback);
         
         auto winSize = this->m_mainLayer->getContentSize();
@@ -269,7 +261,7 @@ public:
     static AddValuePopup* create(std::function<void(float)> callback, bool isXAxis) {
         auto ret = new AddValuePopup();
         ret->m_isXAxis = isXAxis;
-        if (ret->initAnchored(240.0f, 140.0f, std::move(callback))) {
+        if (ret->init(std::move(callback))) {
             ret->autorelease();
             return ret;
         }
@@ -280,20 +272,22 @@ public:
 
 IconOffsetEditorPopup* IconOffsetEditorPopup::create() {
     auto ret = new IconOffsetEditorPopup();
-    if (ret->initAnchored(280.0f, 175.0f, "GJ_square01.png")) {
-        ret->autorelease();
+    if (ret->init()) {
+        ret->autorelease(); 
         return ret;
     }
     delete ret;
     return nullptr;
 }
 
-bool IconOffsetEditorPopup::setup() {
+bool IconOffsetEditorPopup::init() {
+    if (!Popup::init(280.0f, 175.0f, "GJ_square01.png")) return false;
+
     this->setTitle("Icon Workbench");
 
     auto manager = GameManager::sharedState();
     m_currentIconType = manager->m_playerIconType;
-    IconInfo* icInfo = more_icons::getIcon(m_currentIconType);
+    IconInfo* icInfo = more_icons::activeIcon(m_currentIconType);
     auto size = this->m_mainLayer->getContentSize();
     auto popupSize = this->getContentSize();
     bool isRobotOrSpider = (m_currentIconType == IconType::Robot || m_currentIconType == IconType::Spider);
@@ -338,7 +332,7 @@ bool IconOffsetEditorPopup::setup() {
     // MISC SETUPS
     // -----------------------
 
-	m_iconNameLabel = CCLabelBMFont::create(fmt::format("Editing: {}", icInfo->shortName).c_str(), "chatFont.fnt");
+	m_iconNameLabel = CCLabelBMFont::create(fmt::format("Editing: {}", icInfo->getShortName()).c_str(), "chatFont.fnt");
 	m_iconNameLabel->setPosition({midX, size.height - 35.f});
 	m_iconNameLabel->setScale(0.5f);
     m_iconNameLabel->setOpacity(135);
@@ -953,8 +947,8 @@ bool IconOffsetEditorPopup::setup() {
     // THIS (somehow) WORKS DON'T TOUCH IT
     // -----------------------
     if (isRobotOrSpider) {
-        if (!icInfo->frameNames.empty()) {
-            m_frameNames = icInfo->frameNames;
+        if (!icInfo->getFrameNames().empty()) {
+            m_frameNames = icInfo->getFrameNames();
             partCount = m_frameNames.size();
             
             /*
@@ -1164,13 +1158,13 @@ std::string IconOffsetEditorPopup::getCurrentRealFrameName() {
     
     auto rect = frame->getRect();
     
-    auto icInfo = more_icons::getIcon(m_currentIconType);
-    if (!icInfo || icInfo->frameNames.empty()) {
+    auto icInfo = more_icons::activeIcon(m_currentIconType);
+    if (!icInfo || icInfo->getFrameNames().empty()) {
         log::warn("Couldn't get IconInfo or frameNames is empty");
         return "";
     }
     
-    for (const auto& fullFrameName : icInfo->frameNames) {
+    for (const auto& fullFrameName : icInfo->getFrameNames()) {
         auto cachedFrame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(fullFrameName.c_str());
         
         if (!cachedFrame || cachedFrame->getTag() == FALLBACK_TAG) {
@@ -1419,7 +1413,10 @@ void IconOffsetEditorPopup::onColorPicker(CCObject* sender) {
     }
     
     auto colorPopup = geode::ColorPickPopup::create(currentColor);
-    colorPopup->setDelegate(this);
+    //colorPopup->setDelegate(this);
+    colorPopup->setCallback([this](cocos2d::ccColor4B color) {
+        this->updateColor(color);
+    });
     colorPopup->show();
 }
 
@@ -1588,13 +1585,13 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
         return;
     }
 
-    auto icInfo = more_icons::getIcon(m_currentIconType);
+    auto icInfo = more_icons::activeIcon(m_currentIconType);
     if (!icInfo) {
         FLAlertLayer::create("Error", "<cr>Couldn't get icon info!</c>", "OK")->show();
         return;
     }
 
-    std::string plistPath = icInfo->sheetName;
+    std::string plistPath = icInfo->getSheetString();
 
     if (plistPath.empty()) {
         FLAlertLayer::create("Error", "<cr>Couldn't get the icon's plist!</c>\nPlease make sure your Texture Pack path is valid, and you're not trying to edit a zipped texture pack.", "OK")->show();
@@ -1645,7 +1642,7 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
     std::vector<std::string> failedUpdates;
     std::vector<std::string> notFoundFrames;
 
-    std::string iconShortName = icInfo->shortName;
+    std::string iconShortName = icInfo->getShortName();
     std::string internalFrameName = "";
 
     if (remapNames && !iconShortName.empty()) {
@@ -2012,7 +2009,7 @@ CCImage* IconOffsetEditorPopup::getIconImage() {
 }
 
 void IconOffsetEditorPopup::onRenderIcon(CCObject* sender) {
-    auto icInfo = more_icons::getIcon(m_currentIconType);
+    auto icInfo = more_icons::activeIcon(m_currentIconType);
     if (!icInfo) {
         FLAlertLayer::create("Error", "Couldn't get icon info!", "aw :(")->show();
         return;
@@ -2022,7 +2019,7 @@ void IconOffsetEditorPopup::onRenderIcon(CCObject* sender) {
     
     if (!std::filesystem::exists(renderPath)) std::filesystem::create_directories(renderPath);
     
-    std::string renderFilename = fmt::format("{}-{}.png", icInfo->shortName, getCurrentTimeString());
+    std::string renderFilename = fmt::format("{}-{}.png", icInfo->getShortName(), getCurrentTimeString());
     
     auto finalPath = renderPath / renderFilename;
     
@@ -2050,7 +2047,7 @@ void IconOffsetEditorPopup::onRenderIcon(CCObject* sender) {
             fmt::format("Icon rendered successfully!\nSaved to: <cy>{}</c>", utils::string::pathToString(finalPath)),
             ":D"
         )->show();
-        log::info("Successfully rendered icon {} to {}", icInfo->shortName, utils::string::pathToString(finalPath));
+        log::info("Successfully rendered icon {} to {}", icInfo->getShortName(), utils::string::pathToString(finalPath));
     } else {
         FLAlertLayer::create(
             "Error",

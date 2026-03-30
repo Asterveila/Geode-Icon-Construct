@@ -21,9 +21,9 @@ struct FrameOffsetData {
 
 class AddValuePopup;
 
-class IconOffsetEditorPopup : public Popup<>, public geode::ColorPickPopupDelegate {
+class IconOffsetEditorPopup : public Popup {
 protected:
-    bool setup() override;
+    bool init() override;
     
     SimplePlayer* m_previewPlayer = nullptr;
     CCNode* m_iconContainerNode = nullptr;
@@ -105,9 +105,9 @@ protected:
     void onAddToOffsetX(CCObject* sender);
     void onAddToOffsetY(CCObject* sender);
 
+    void updateColor(cocos2d::ccColor4B const& color);
     void onHitboxOpacityChanged(CCObject* sender);
     void onColorPicker(CCObject* sender);
-    void updateColor(cocos2d::ccColor4B const& color) override;
     void applyPreviewColors();
     CCMenuItemSpriteExtra* createColorPickerButton(const std::string& colorId, ccColor3B currentColor);
     void onClose(CCObject* sender) override;

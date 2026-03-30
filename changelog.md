@@ -1,3 +1,6 @@
+# v1.4.0
+- Updated to Geode v5 (Geometry Dash 2.2081).
+
 # v1.3.0
 - Updated More Icons support to the new API version (Added by [hiimjasmine00](user:7466002))
 - Added Automatic Reloading after applying plist changes (Added by [hiimjasmine00](user:7466002))

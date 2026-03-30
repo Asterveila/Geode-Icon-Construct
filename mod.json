@@ -1,10 +1,10 @@
 {
-	"geode": "4.10.0",
+	"geode": "5.4.1",
 	"gd": {
-		"win": "2.2074",
-		"android": "2.2074",
-		"mac": "2.2074",
-		"ios": "2.2074"
+		"win": "2.2081",
+		"android": "2.2081",
+		"mac": "2.2081",
+		"ios": "2.2081"
 	},
 	"resources": {
 		"sprites": [
@@ -51,7 +51,7 @@
 	},
 	"id": "saritahhh.offset_assist",
 	"name": "Icon Construct",
-	"version": "v1.3.0",
+	"version": "v1.4.0",
 	"developer": "Saritahhh",
 	"description": "All-in-one Utils for Icon Creators!",
 	"tags": ["interface", "utility"],
@@ -61,8 +61,8 @@
 	"dependencies": {
 		"geode.node-ids": ">=v1.20.0",
 		"hiimjustin000.more_icons": {
-            "version": ">=v1.16.0",
-            "importance": "required"
+            "version": ">=v2.0.0",
+            "required": true
         }
 	}
 }

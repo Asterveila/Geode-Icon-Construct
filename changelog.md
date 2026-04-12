@@ -1,3 +1,6 @@
+# v1.4.1
+- Fixed plist editing being broken with More Icons' latest update.
+
 # v1.4.0
 - Updated to Geode v5 (Geometry Dash 2.2081).
 

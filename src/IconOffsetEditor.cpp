@@ -175,6 +175,24 @@ std::string getRealFrameName(const std::string& fullFrameName) {
     return result;
 }
 
+int getPrefixLen(IconType type) {
+    switch(type) {
+        case IconType::Ufo:
+            return 4;
+        case IconType::Robot:
+            return 6;
+        case IconType::Spider:
+            return 7;
+        case IconType::Swing:
+            return 6;
+        case IconType::Jetpack:
+            return 8;
+        default:
+            return 5; // cube, ship, ball, wave all are 4 chars long :sob:
+        // oh and theres 1 extra char for the _
+    }
+}
+
 // std::function<void(float)>
 class AddValuePopup : public Popup {
 protected:
@@ -951,15 +969,6 @@ bool IconOffsetEditorPopup::init() {
             m_frameNames = icInfo->getFrameNames();
             partCount = m_frameNames.size();
             
-            /*
-            for (const auto& frameName : m_frameNames) {
-                auto frame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(frameName.c_str());
-                if (frame) {
-                    m_storedOffsets[frameName] = frame->getOffsetInPixels();
-                }
-            }
-            */
-            
             auto targetNode = (m_currentIconType == IconType::Robot) ? 
                 static_cast<CCNode*>(m_previewPlayer->m_robotSprite) : 
                 static_cast<CCNode*>(m_previewPlayer->m_spiderSprite);
@@ -1696,17 +1705,18 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
     }
 
     for (const auto& [frameName, offset] : m_modifiedOffsets) {
-        std::string searchFrameName = frameName;
+        std::string unfuckedFrameName = frameName.substr(getPrefixLen(m_currentIconType));
+        std::string searchFrameName = unfuckedFrameName;
         
         if (remapNames && !internalFrameName.empty() && !iconShortName.empty()) {
-            if (frameName.length() > iconShortName.length() && 
-                frameName.substr(0, iconShortName.length()) == iconShortName) {
+            if (unfuckedFrameName.length() > iconShortName.length() && 
+                unfuckedFrameName.substr(0, iconShortName.length()) == iconShortName) {
                 
-                std::string suffix = frameName.substr(iconShortName.length());
+                std::string suffix = unfuckedFrameName.substr(iconShortName.length());
                 
                 searchFrameName = internalFrameName + suffix;
                 
-                addToLog(fmt::format("<cy>[REMAPPED]</c> `{}` <cl>-></c> `{}`", frameName, searchFrameName), 1);
+                addToLog(fmt::format("<cy>[REMAPPED]</c> `{}` <cl>-></c> `{}`", unfuckedFrameName, searchFrameName), 1);
             }
         }
         
@@ -1715,23 +1725,23 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
 
         if (framePos == std::string::npos) {
             if (!remapNames) {
-                notFoundFrames.push_back(frameName);
+                notFoundFrames.push_back(unfuckedFrameName);
                 notFoundCount++;
             } else {
-                failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> frame **{}** (remapped to `{}`) not found in plist even after remapping.", frameName, searchFrameName));
+                failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> frame **{}** (remapped to `{}`) not found in plist even after remapping.", unfuckedFrameName, searchFrameName));
             }
             continue;
         }
 
         size_t frameDictStart = plistContent.find("<dict>", framePos);
         if (frameDictStart == std::string::npos) {
-            failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> opening <dict> for frame **{}** not found.", frameName));
+            failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> opening <dict> for frame **{}** not found.", unfuckedFrameName));
             continue;
         }
 
         size_t frameDictEnd = plistContent.find("</dict>", frameDictStart);
         if (frameDictEnd == std::string::npos) {
-            failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> closing </dict> for frame **{}** not found.", frameName));
+            failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> closing </dict> for frame **{}** not found.", unfuckedFrameName));
             continue;
         }
 
@@ -1742,7 +1752,7 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
         size_t offsetKeyPos = frameSection.find("<key>spriteOffset</key>");
 
         if (offsetKeyPos == std::string::npos) {
-            failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> spriteOffset for frame **{}** not found.", frameName));
+            failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> spriteOffset for frame **{}** not found.", unfuckedFrameName));
             continue;
         }
 
@@ -1753,7 +1763,7 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
 
         if (stringStart == std::string::npos || stringEnd == std::string::npos ||
             stringStart > frameDictEnd || stringEnd > frameDictEnd) {
-            failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> spriteOffset string tags for frame **{}** not found.", frameName));
+            failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> spriteOffset string tags for frame **{}** not found.", unfuckedFrameName));
             continue;
         }
 
@@ -1768,9 +1778,9 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
         );
 
         if (remapNames) {
-            successfulUpdates.push_back(fmt::format("**{}** <cl>-></c> `{}`: `{}`", frameName, searchFrameName, newOffsetStr));
+            successfulUpdates.push_back(fmt::format("**{}** <cl>-></c> `{}`: `{}`", unfuckedFrameName, searchFrameName, newOffsetStr));
         } else {
-            successfulUpdates.push_back(fmt::format("**{}**: `{}`", frameName, newOffsetStr));
+            successfulUpdates.push_back(fmt::format("**{}**: `{}`", unfuckedFrameName, newOffsetStr));
         }
         updatedCount++;
     }

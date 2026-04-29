@@ -1,4 +1,10 @@
 # Icon Construct
+
+![Mod Version](https://api.geode-sdk.org/v1/mods/saritahhh.offset_assist/status_badge?stat=version)
+![Downloads](https://api.geode-sdk.org/v1/mods/saritahhh.offset_assist/status_badge?stat=downloads)
+![GD Version](https://api.geode-sdk.org/v1/mods/saritahhh.offset_assist/status_badge?stat=gd_version)
+![Geode Version](https://api.geode-sdk.org/v1/mods/saritahhh.offset_assist/status_badge?stat=geode_version)
+
 ***Icon Construct*** is a very simple tool mod designed for Icon Creators which allows you to Edit and Preview on real time Sprite Offsets for your icons!
 
 This mod is meant to be used alongside the More Icons mod, more specifically, its Icon Editor feature. You create the icon first using MoreIcons, then edit the offsets to your liking with Icon Construct. Simple! Therefore, this mod will **only work with MoreIcons added icons, and not with vanilla icons.** 

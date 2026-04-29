@@ -1254,11 +1254,11 @@ void IconOffsetEditorPopup::onPartSelected(CCObject* sender) {
 }
 
 void IconOffsetEditorPopup::onInfoButton(CCObject* sender) {
-    MDPopup::create("Icon Construct Info", infoStr, "OK", nullptr, static_cast<std::function<void(bool)>>(nullptr))->show();
+    MDPopup::create("Icon Construct Info", infoStr, "OK")->show();
 }
 
 void IconOffsetEditorPopup::onWhy(CCObject* sender) {
-    MDPopup::create("Icon Construct Info", whyStr, "OK", nullptr, static_cast<std::function<void(bool)>>(nullptr))->show();
+    MDPopup::create("Icon Construct Info", whyStr, "OK")->show();
 }
 
 void IconOffsetEditorPopup::onToggleGlow(CCObject* sender) {

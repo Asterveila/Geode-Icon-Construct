@@ -21,10 +21,8 @@ struct FrameOffsetData {
 
 class AddValuePopup;
 
-class IconOffsetEditorPopup : public Popup {
+class ConstructLayer : public cocos2d::CCLayer {
 protected:
-    bool init() override;
-    
     SimplePlayer* m_previewPlayer = nullptr;
     CCNode* m_iconContainerNode = nullptr;
     CCSprite* m_cubePreview = nullptr;
@@ -75,6 +73,13 @@ protected:
 
     fmt::memory_buffer m_logStream;
     
+public:
+    static ConstructLayer* create();
+    static cocos2d::CCScene* scene();
+    virtual bool init() override;
+    virtual void keyBackClicked() override;
+
+    void onClose(cocos2d::CCObject* sender);
     void updatePreviewPlayer();
     void onPartSelected(CCObject* sender);
     void onUpdateOffsets(CCObject* sender);
@@ -110,8 +115,5 @@ protected:
     void onColorPicker(CCObject* sender);
     void applyPreviewColors();
     CCMenuItemSpriteExtra* createColorPickerButton(const std::string& colorId, ccColor3B currentColor);
-    void onClose(CCObject* sender) override;
-    
-public:
-    static IconOffsetEditorPopup* create();
+    //void onClose(CCObject* sender) override;
 };

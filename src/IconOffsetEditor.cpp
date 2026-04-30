@@ -288,8 +288,8 @@ public:
     }
 };
 
-IconOffsetEditorPopup* IconOffsetEditorPopup::create() {
-    auto ret = new IconOffsetEditorPopup();
+ConstructLayer* ConstructLayer::create() {
+    auto ret = new ConstructLayer();
     if (ret->init()) {
         ret->autorelease(); 
         return ret;
@@ -298,25 +298,56 @@ IconOffsetEditorPopup* IconOffsetEditorPopup::create() {
     return nullptr;
 }
 
-bool IconOffsetEditorPopup::init() {
-    if (!Popup::init(280.0f, 175.0f, "GJ_square01.png")) return false;
+CCScene* ConstructLayer::scene() {
+    auto scene = CCScene::create();
+    auto layer = ConstructLayer::create();
+    scene->addChild(layer);
+    return scene;
+}
 
-    this->setTitle("Icon Workbench");
+bool ConstructLayer::init() {
+    if (!CCLayer::init()) return false;
 
+    this->setKeypadEnabled(true);
+    this->setTouchEnabled(true);
+
+    auto director = CCDirector::sharedDirector();
+    auto winSize = director->getWinSize();
     auto manager = GameManager::sharedState();
     m_currentIconType = manager->m_playerIconType;
     IconInfo* icInfo = more_icons::activeIcon(m_currentIconType);
-    auto size = this->m_mainLayer->getContentSize();
-    auto popupSize = this->getContentSize();
     bool isRobotOrSpider = (m_currentIconType == IconType::Robot || m_currentIconType == IconType::Spider);
     bool isRiderMode = (m_currentIconType == IconType::Ship || m_currentIconType == IconType::Ufo || m_currentIconType == IconType::Jetpack);
 
-    const float midX = size.width / 2.f;
-    const float midY = size.height / 2.f;
-    const float inputX = midX - 40.0f;
+    const float midX = winSize.width / 2.f;
+    const float midY = winSize.height / 2.f;
+    const float inputX = midX - 80.0f;
     const float inputYTop = midY + 25.0f;
-    const float lowerMenuX = midX - 55.f;
-    const float lowerMenuBaseY = midY - 52.5f;
+    const float lowerMenuX = midX;
+    const float lowerMenuBaseY = midY - 90.0f;
+
+    auto bg = CCSprite::create("GJ_gradientBG.png");
+    auto bgSize = bg->getContentSize();
+    bg->setAnchorPoint({0, 0});
+    bg->setScaleX((winSize.width + 10.f) / bgSize.width);
+    bg->setScaleY((winSize.height + 10.f) / bgSize.height);
+    bg->setPosition({-5, -5});
+    bg->setColor({0, 102, 255});
+    this->addChild(bg, -2);
+
+    auto titleLabel = CCLabelBMFont::create("Icon Workbench", "goldFont.fnt");
+    titleLabel->setPosition({midX, winSize.height - 20.f});
+    this->addChild(titleLabel);
+
+    auto backBtn = CCMenuItemSpriteExtra::create(
+        CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png"),
+        this,
+        menu_selector(ConstructLayer::onClose)
+    );
+    auto backMenu = CCMenu::create();
+    backMenu->addChild(backBtn);
+    backMenu->setPosition({25.f, winSize.height - 25.f});
+    this->addChild(backMenu, 1);
 
     // -----------------------
     // DISABLE FOR VANILLA ICONS (L bozo sorry it's easier to work with MI)
@@ -332,7 +363,7 @@ bool IconOffsetEditorPopup::init() {
         auto whyBtn = CCMenuItemSpriteExtra::create(
             whySpr,
             this,
-            menu_selector(IconOffsetEditorPopup::onWhy)
+            menu_selector(ConstructLayer::onWhy)
         );
 
         auto whyMenu = CCMenu::create();
@@ -341,8 +372,8 @@ bool IconOffsetEditorPopup::init() {
 
         whyBtn->setPosition({midX, midY - 45.f});
         
-        this->m_mainLayer->addChild(warningLabel);
-        this->m_mainLayer->addChild(whyMenu);
+        this->addChild(warningLabel);
+        this->addChild(whyMenu);
         return true;
     }
 
@@ -351,12 +382,10 @@ bool IconOffsetEditorPopup::init() {
     // -----------------------
 
 	m_iconNameLabel = CCLabelBMFont::create(fmt::format("Editing: {}", icInfo->getShortName()).c_str(), "chatFont.fnt");
-	m_iconNameLabel->setPosition({midX, size.height - 35.f});
+	m_iconNameLabel->setPosition({midX, winSize.height - 45.f});
 	m_iconNameLabel->setScale(0.5f);
     m_iconNameLabel->setOpacity(135);
-	this->m_mainLayer->addChild(m_iconNameLabel);
-
-    this->setOpacity(165);
+    this->addChild(m_iconNameLabel);
 
     // -----------------------
     // TOP RIGHT BUTTON MENU
@@ -366,7 +395,7 @@ bool IconOffsetEditorPopup::init() {
     auto infoBtn = CCMenuItemSpriteExtra::create(
         infoSpr,
         this,
-        menu_selector(IconOffsetEditorPopup::onInfoButton)
+        menu_selector(ConstructLayer::onInfoButton)
     );
 
     auto renderSpr = CircleButtonSprite::create(CCSprite::create("renderIcon.png"_spr), CircleBaseColor::Green, CircleBaseSize::Small);
@@ -374,7 +403,7 @@ bool IconOffsetEditorPopup::init() {
     auto renderBtn = CCMenuItemSpriteExtra::create(
         renderSpr,
         this,
-        menu_selector(IconOffsetEditorPopup::onRenderIcon)
+        menu_selector(ConstructLayer::onRenderIcon)
     );
 
     auto openFolderSpr = CircleButtonSprite::create(CCSprite::createWithSpriteFrameName("folderIcon_001.png"), CircleBaseColor::Green, CircleBaseSize::Small);
@@ -382,7 +411,7 @@ bool IconOffsetEditorPopup::init() {
     auto openFolderBtn = CCMenuItemSpriteExtra::create(
         openFolderSpr,
         this,
-        menu_selector(IconOffsetEditorPopup::onOpenRendersFolder)
+        menu_selector(ConstructLayer::onOpenRendersFolder)
     );
 
     infoBtn->setID("info-button"_spr);
@@ -404,24 +433,21 @@ bool IconOffsetEditorPopup::init() {
     topRightMenu->setAnchorPoint({1.f, 1.f});
     topRightMenu->setContentSize({60.f, 20.f});
     topRightMenu->updateLayout();
-    topRightMenu->setPosition({size.width - 8.f, size.height - 13.f});
-    this->m_mainLayer->addChild(topRightMenu);
+    topRightMenu->setPosition({winSize.width - 15.f, winSize.height - 15.f});
+    this->addChild(topRightMenu);
 
     // -----------------------
     // SETTINGS BUTTON THINGY HI
     // -----------------------
     auto optionsBtn02Spr = CCSprite::createWithSpriteFrameName("GJ_optionsBtn02_001.png");
-    auto optionsBtn02Btn = CCMenuItemSpriteExtra::create(optionsBtn02Spr, this, menu_selector(IconOffsetEditorPopup::onModSettings));
+    auto optionsBtn02Btn = CCMenuItemSpriteExtra::create(optionsBtn02Spr, this, menu_selector(ConstructLayer::onModSettings));
     auto optionsBtnMenu = CCMenu::create();
 
     optionsBtn02Spr->setScale(0.8f);
-    optionsBtnMenu->setPosition({0.f, 0.f});
     optionsBtnMenu->addChild(optionsBtn02Btn);
-    optionsBtn02Btn->setPosition({0.f, 0.f});
-
-	optionsBtnMenu->setID("options-menu"_spr);
-
-    this->m_mainLayer->addChild(optionsBtnMenu);
+    optionsBtnMenu->setPosition({winSize.width - 25.f, 25.f});
+    optionsBtnMenu->setID("options-menu"_spr);
+    this->addChild(optionsBtnMenu);
 
     // -----------------------
     // LEFT SIDE MENU
@@ -449,18 +475,18 @@ bool IconOffsetEditorPopup::init() {
     m_colorPickerMenu->setAnchorPoint({0.5f, 0.5f});
     m_colorPickerMenu->setContentSize({20.f, 70.f});
     m_colorPickerMenu->updateLayout();
-    m_colorPickerMenu->setPosition({-20.f, midY});
+    m_colorPickerMenu->setPosition({50.f, midY});
     m_colorPickerMenu->setID("color-picker-menu"_spr);
-    this->m_mainLayer->addChild(m_colorPickerMenu);
+    this->addChild(m_colorPickerMenu);
 
     // THIS MOVES POPUP TO THE LEFT
     // ADDING A COMMENT CUZ I LITERALLY LOST THIS LINE LMAO
     float pleaseCenter = (m_currentIconType == IconType::Robot || m_currentIconType == IconType::Spider) ? 50.f : 30.f;
-    m_mainLayer->setPosition({m_mainLayer->getPositionX() - pleaseCenter, m_mainLayer->getPositionY()});
+    (void)pleaseCenter;
 
     auto colLabelsNode = CCNode::create();
     colLabelsNode->setContentSize(m_colorPickerMenu->getContentSize());
-    colLabelsNode->setPosition({m_colorPickerMenu->getPositionX() - 30.f, m_colorPickerMenu->getPositionY()});
+    colLabelsNode->setPosition({20.f, midY});
     
     auto col1Label = CCLabelBMFont::create("Col 1", "bigFont.fnt");
     auto col2Label = CCLabelBMFont::create("Col 2", "bigFont.fnt");
@@ -492,7 +518,7 @@ bool IconOffsetEditorPopup::init() {
     col3Label->setScale(0.3f);
     colLabelsNode->updateLayout();
 
-    this->m_mainLayer->addChild(colLabelsNode);
+    this->addChild(colLabelsNode);
     
     // -----------------------
     // SETUP ICON CONTAINER NODE
@@ -500,7 +526,7 @@ bool IconOffsetEditorPopup::init() {
     m_iconContainerNode = CCNode::create();
     m_iconContainerNode->setContentSize({50.f, 50.f});
     m_iconContainerNode->setAnchorPoint({0.5f, 0.5f});
-    m_iconContainerNode->setPosition({midX + 75.f, midY});
+    m_iconContainerNode->setPosition({midX + 80.f, midY});
     m_iconContainerNode->setScale(2.f);
     m_iconContainerNode->setZOrder(2);
     m_iconContainerNode->setID("icon-container"_spr);
@@ -517,7 +543,7 @@ bool IconOffsetEditorPopup::init() {
     updatePreviewPlayer();
     
     m_iconContainerNode->addChild(m_previewPlayer);
-    this->m_mainLayer->addChild(m_iconContainerNode);
+    this->addChild(m_iconContainerNode);
 
     // -----------------------
     // CUBE PREVIEW FOR RIDER GAMEMODES
@@ -544,11 +570,11 @@ bool IconOffsetEditorPopup::init() {
         auto opacityLabel = CCLabelBMFont::create("Cube Opacity:", "goldFont.fnt");
         opacityLabel->setPosition({lowerMenuX, lowerMenuBaseY + 15.f});
         opacityLabel->setScale(0.35f);
-        this->m_mainLayer->addChild(opacityLabel);
+        this->addChild(opacityLabel);
         
         m_cubeOpacitySlider = Slider::create(
             this,
-            menu_selector(IconOffsetEditorPopup::onExtraPreviewOpacityChanged),
+            menu_selector(ConstructLayer::onExtraPreviewOpacityChanged),
             0.6f
         );
         m_cubeOpacitySlider->setValue(1.0f);
@@ -558,14 +584,14 @@ bool IconOffsetEditorPopup::init() {
         opacityMenu->addChild(m_cubeOpacitySlider);
         opacityMenu->setPosition({lowerMenuX, lowerMenuBaseY});
         opacityMenu->setID("cube-opacity-menu"_spr);
-        this->m_mainLayer->addChild(opacityMenu);
+        this->addChild(opacityMenu);
         
         m_cubeOpacityLabel = CCLabelBMFont::create("100%", "bigFont.fnt");
         m_cubeOpacityLabel->setPosition({lowerMenuX, lowerMenuBaseY - 10.f});
         m_cubeOpacityLabel->setScale(0.25f);
         m_cubeOpacityLabel->setOpacity(150);
         m_cubeOpacityLabel->setID("cube-opacity-label"_spr);
-        this->m_mainLayer->addChild(m_cubeOpacityLabel);
+        this->addChild(m_cubeOpacityLabel);
     }
 
     // -----------------------
@@ -602,11 +628,11 @@ bool IconOffsetEditorPopup::init() {
         auto opacityLabel = CCLabelBMFont::create("Swing Fires Opacity:", "goldFont.fnt");
         opacityLabel->setPosition({lowerMenuX, lowerMenuBaseY + 15.f});
         opacityLabel->setScale(0.35f);
-        this->m_mainLayer->addChild(opacityLabel);
+        this->addChild(opacityLabel);
         
         m_cubeOpacitySlider = Slider::create(
             this,
-            menu_selector(IconOffsetEditorPopup::onExtraPreviewOpacityChanged),
+            menu_selector(ConstructLayer::onExtraPreviewOpacityChanged),
             0.6f
         );
         m_cubeOpacitySlider->setValue(1.0f);
@@ -616,13 +642,13 @@ bool IconOffsetEditorPopup::init() {
         opacityMenu->addChild(m_cubeOpacitySlider);
         opacityMenu->setPosition({lowerMenuX, lowerMenuBaseY});
         opacityMenu->setID("swing-fires-opacity-menu"_spr);
-        this->m_mainLayer->addChild(opacityMenu);
+        this->addChild(opacityMenu);
         
         m_cubeOpacityLabel = CCLabelBMFont::create("100%", "bigFont.fnt");
         m_cubeOpacityLabel->setPosition({lowerMenuX, lowerMenuBaseY - 10.f});
         m_cubeOpacityLabel->setScale(0.25f);
         m_cubeOpacityLabel->setOpacity(150);
-        this->m_mainLayer->addChild(m_cubeOpacityLabel);
+        this->addChild(m_cubeOpacityLabel);
     }
 
     // -----------------------
@@ -637,7 +663,7 @@ bool IconOffsetEditorPopup::init() {
             ->setGap(6.f)
             ->setAxisAlignment(AxisAlignment::Center)
     );
-    this->m_mainLayer->addChild(previewMenu);
+    this->addChild(previewMenu);
 
     auto glowLabel = CCLabelBMFont::create("Glow", "bigFont.fnt");
     glowLabel->setScale(0.35f);
@@ -646,7 +672,7 @@ bool IconOffsetEditorPopup::init() {
     m_glowToggler = CCMenuItemSpriteExtra::create(
         glowSpr,
         this,
-        menu_selector(IconOffsetEditorPopup::onToggleGlow)
+        menu_selector(ConstructLayer::onToggleGlow)
     );
     previewMenu->addChild(m_glowToggler);
 
@@ -657,7 +683,7 @@ bool IconOffsetEditorPopup::init() {
     m_hitboxToggler = CCMenuItemSpriteExtra::create(
         hitboxSpr,
         this,
-        menu_selector(IconOffsetEditorPopup::onToggleHitbox)
+        menu_selector(ConstructLayer::onToggleHitbox)
     );
     previewMenu->addChild(m_hitboxToggler);
 
@@ -668,14 +694,14 @@ bool IconOffsetEditorPopup::init() {
 
     // opacity slider
     auto hitboxOpacityLabel = CCLabelBMFont::create("Hitbox Border Opacity:", "goldFont.fnt");
-    hitboxOpacityLabel->setPosition({midX, size.height + 32.f});
+    hitboxOpacityLabel->setPosition({midX, winSize.height - 32.f});
     hitboxOpacityLabel->setScale(0.35f);
     hitboxOpacityLabel->setID("hitbox-opacity-label-text"_spr);
-    this->m_mainLayer->addChild(hitboxOpacityLabel);
+    this->addChild(hitboxOpacityLabel);
 
     m_hitboxOpacitySlider = Slider::create(
         this,
-        menu_selector(IconOffsetEditorPopup::onHitboxOpacityChanged),
+        menu_selector(ConstructLayer::onHitboxOpacityChanged),
         0.6f
     );
     m_hitboxOpacitySlider->setValue(1.0f);
@@ -683,16 +709,16 @@ bool IconOffsetEditorPopup::init() {
 
     auto hitboxOpacityMenu = CCMenu::create();
     hitboxOpacityMenu->addChild(m_hitboxOpacitySlider);
-    hitboxOpacityMenu->setPosition({midX, size.height + 20.f});
+    hitboxOpacityMenu->setPosition({midX, winSize.height - 20.f});
     hitboxOpacityMenu->setID("hitbox-opacity-menu"_spr);
-    this->m_mainLayer->addChild(hitboxOpacityMenu);
+    this->addChild(hitboxOpacityMenu);
 
     m_hitboxOpacityLabel = CCLabelBMFont::create("100%", "bigFont.fnt");
-    m_hitboxOpacityLabel->setPosition({midX, size.height + 10.f});
+    m_hitboxOpacityLabel->setPosition({midX, winSize.height - 10.f});
     m_hitboxOpacityLabel->setScale(0.25f);
     m_hitboxOpacityLabel->setOpacity(150);
     m_hitboxOpacityLabel->setID("hitbox-opacity-value-label"_spr);
-    this->m_mainLayer->addChild(m_hitboxOpacityLabel);
+    this->addChild(m_hitboxOpacityLabel);
 
     if (isRobotOrSpider) {
         auto robotSprite = (m_currentIconType == IconType::Robot) ? 
@@ -715,7 +741,7 @@ bool IconOffsetEditorPopup::init() {
     m_hitboxDrawNode->setVisible(false);
     m_hitboxDrawNode->setID("hitbox-preview"_spr);
     //if (m_currentIconType == IconType::Ship) m_hitboxDrawNode->setPosition({0.f, 10.f});
-    this->m_mainLayer->addChild(m_hitboxDrawNode);
+    this->addChild(m_hitboxDrawNode);
 
     drawHitbox();
 
@@ -734,13 +760,13 @@ bool IconOffsetEditorPopup::init() {
                 ->setAxisAlignment(AxisAlignment::Center)
                 ->setAxisReverse(false)
         );
-        this->m_mainLayer->addChild(m_animButtonsMenu);
+        this->addChild(m_animButtonsMenu);
 
         auto animDescLabel = CCLabelBMFont::create("Test Animations", "goldFont.fnt");
         animDescLabel->setPosition({lowerMenuX, lowerMenuBaseY + 15.f});
         animDescLabel->setScale(0.4f);
         animDescLabel->setID("test-animations-label"_spr);
-        this->m_mainLayer->addChild(animDescLabel);
+        this->addChild(animDescLabel);
         
         if (m_currentIconType == IconType::Robot) {
             auto createAnimBtn = [this](const char* label, const char* animName) {
@@ -749,7 +775,7 @@ bool IconOffsetEditorPopup::init() {
                 auto btn = CCMenuItemSpriteExtra::create(
                     CircleButtonSprite::create(lbl, CircleBaseColor::Gray, CircleBaseSize::Small),
                     this,
-                    menu_selector(IconOffsetEditorPopup::onPlayAnimation)
+                    menu_selector(ConstructLayer::onPlayAnimation)
                 );
                 btn->setUserObject("anim-name"_spr, CCString::create(animName));
                 btn->setID(fmt::format("play-{}-anim"_spr, animName));
@@ -768,7 +794,7 @@ bool IconOffsetEditorPopup::init() {
                 auto btn = CCMenuItemSpriteExtra::create(
                     CircleButtonSprite::create(lbl, CircleBaseColor::Gray, CircleBaseSize::Small),
                     this,
-                    menu_selector(IconOffsetEditorPopup::onPlayAnimation)
+                    menu_selector(ConstructLayer::onPlayAnimation)
                 );
                 btn->setUserObject("anim-name"_spr, CCString::create(animName));
                 return btn;
@@ -797,14 +823,14 @@ bool IconOffsetEditorPopup::init() {
                 ->setAxisAlignment(AxisAlignment::Center)
         );
         m_animButtonsMenu->setScale(0.7f);
-        this->m_mainLayer->addChild(m_animButtonsMenu);
+        this->addChild(m_animButtonsMenu);
         
         auto playLbl = CCLabelBMFont::create("Spin", "bigFont.fnt");
         playLbl->setScale(0.35f);
         auto playBtn = CCMenuItemSpriteExtra::create(
             CircleButtonSprite::create(playLbl, CircleBaseColor::Green, CircleBaseSize::Small),
             this,
-            menu_selector(IconOffsetEditorPopup::onPlayBallRotation)
+            menu_selector(ConstructLayer::onPlayBallRotation)
         );
         playBtn->setID("play-rolling"_spr);
         
@@ -813,7 +839,7 @@ bool IconOffsetEditorPopup::init() {
         auto stopBtn = CCMenuItemSpriteExtra::create(
             CircleButtonSprite::create(stopLbl, CircleBaseColor::Gray, CircleBaseSize::Small),
             this,
-            menu_selector(IconOffsetEditorPopup::onStopBallRotation)
+            menu_selector(ConstructLayer::onStopBallRotation)
         );
         stopBtn->setID("stop-rolling"_spr);
         
@@ -826,11 +852,11 @@ bool IconOffsetEditorPopup::init() {
         speedLabel->setPosition({lowerMenuX - 15.f, lowerMenuBaseY + 15.f});
         speedLabel->setScale(0.3f);
         speedLabel->setID("spin-label"_spr);
-        this->m_mainLayer->addChild(speedLabel);
+        this->addChild(speedLabel);
         
         m_rotationSpeedSlider = Slider::create(
             this, 
-            menu_selector(IconOffsetEditorPopup::onRotationSpeedChanged), 
+            menu_selector(ConstructLayer::onRotationSpeedChanged), 
             0.6f
         );
         m_rotationSpeedSlider->setValue(0.5f);
@@ -840,13 +866,13 @@ bool IconOffsetEditorPopup::init() {
         sliderMenu->addChild(m_rotationSpeedSlider);
         sliderMenu->setPosition({lowerMenuX, lowerMenuBaseY});
         sliderMenu->setID("slider-menu"_spr);
-        this->m_mainLayer->addChild(sliderMenu);
+        this->addChild(sliderMenu);
         
         m_rotationSpeedLabel = CCLabelBMFont::create("1.0", "bigFont.fnt");
         m_rotationSpeedLabel->setPosition({lowerMenuX + 50.f, lowerMenuBaseY + 15.f});
         m_rotationSpeedLabel->setScale(0.3f);
         m_rotationSpeedLabel->setID("rotation-speed-label"_spr);
-        this->m_mainLayer->addChild(m_rotationSpeedLabel);
+        this->addChild(m_rotationSpeedLabel);
     }
 
     // -----------------------
@@ -859,14 +885,14 @@ bool IconOffsetEditorPopup::init() {
     m_labelX->setScale(0.4f);
     m_labelX->setAnchorPoint({0.0f, 0.5f});
     m_labelX->setID("x-offset-label"_spr);
-    this->m_mainLayer->addChild(m_labelX);
+    this->addChild(m_labelX);
 
     m_inputX = geode::TextInput::create(80.0f, "0.0", "bigFont.fnt");
     m_inputX->setPosition({inputX + 20.0f, inputYTop});
     m_inputX->setScale(0.7f);
     m_inputX->setFilter("0123456789.-");
     m_inputX->setID("x-offset-input"_spr);
-    this->m_mainLayer->addChild(m_inputX);
+    this->addChild(m_inputX);
     if (Mod::get()->getSettingValue<bool>("update-offsets-live")) {
         m_inputX->setCallback([this](std::string const&) {
             this->onUpdateOffsets(nullptr);
@@ -879,7 +905,7 @@ bool IconOffsetEditorPopup::init() {
     auto addXBtn = CCMenuItemSpriteExtra::create(
         addXSpr,
         this,
-        menu_selector(IconOffsetEditorPopup::onAddToOffsetX)
+        menu_selector(ConstructLayer::onAddToOffsetX)
     );
     addXBtn->setID("add-to-x-offset"_spr);
 
@@ -887,7 +913,7 @@ bool IconOffsetEditorPopup::init() {
     addXMenu->addChild(addXBtn);
     addXMenu->setPosition({inputX - 10.0f, inputYTop + 10.f});
     addXMenu->setID("add-to-x-menu"_spr);
-    this->m_mainLayer->addChild(addXMenu);
+    this->addChild(addXMenu);
 
     // y offset
     m_labelY = CCLabelBMFont::create("Offset Y:", "bigFont.fnt");
@@ -895,14 +921,14 @@ bool IconOffsetEditorPopup::init() {
     m_labelY->setScale(0.4f);
     m_labelY->setAnchorPoint({0.0f, 0.5f});
     m_labelY->setID("y-offset-label"_spr);
-    this->m_mainLayer->addChild(m_labelY);
+    this->addChild(m_labelY);
 
     m_inputY = geode::TextInput::create(80.0f, "0.0", "bigFont.fnt");
     m_inputY->setPosition({inputX + 20.0f, inputYTop - 40.0f});
     m_inputY->setScale(0.7f);
     m_inputY->setFilter("0123456789.-");
     m_inputY->setID("y-offset-input"_spr);
-    this->m_mainLayer->addChild(m_inputY);
+    this->addChild(m_inputY);
     if (Mod::get()->getSettingValue<bool>("update-offsets-live")) {
         m_inputY->setCallback([this](std::string const&) {
             this->onUpdateOffsets(nullptr);
@@ -915,7 +941,7 @@ bool IconOffsetEditorPopup::init() {
     auto addYBtn = CCMenuItemSpriteExtra::create(
         addYSpr,
         this,
-        menu_selector(IconOffsetEditorPopup::onAddToOffsetY)
+        menu_selector(ConstructLayer::onAddToOffsetY)
     );
     addYBtn->setID("add-to-y-offset"_spr);
 
@@ -923,14 +949,14 @@ bool IconOffsetEditorPopup::init() {
     addYMenu->addChild(addYBtn);
     addYMenu->setPosition({inputX - 10.0f, inputYTop - 30.0f});
     addYMenu->setID("add-to-y-menu"_spr);
-    this->m_mainLayer->addChild(addYMenu);
+    this->addChild(addYMenu);
     
     // action buttons hi
     auto updateBtnSpr = ButtonSprite::create("Update", "goldFont.fnt", "GJ_button_01.png", 0.7f);
     m_updateButton = CCMenuItemSpriteExtra::create(
         updateBtnSpr,
         this,
-        menu_selector(IconOffsetEditorPopup::onUpdateOffsets)
+        menu_selector(ConstructLayer::onUpdateOffsets)
     );
     m_updateButton->setID("update-offsets"_spr);
 
@@ -938,7 +964,7 @@ bool IconOffsetEditorPopup::init() {
     auto savePlistBtn = CCMenuItemSpriteExtra::create(
         savePlistSpr,
         this,
-        menu_selector(IconOffsetEditorPopup::onSavePlist)
+        menu_selector(ConstructLayer::onSavePlist)
     );
     savePlistBtn->setID("save-to-plist"_spr);
     
@@ -956,11 +982,9 @@ bool IconOffsetEditorPopup::init() {
 	buttonMenu->updateLayout();
 	buttonMenu->setID("lower-button-menu"_spr);
     
-    this->m_mainLayer->addChild(buttonMenu);
+    this->addChild(buttonMenu);
 
     int partCount = 4;
-    
-    // -----------------------
     // BUNCH OF BULLSHIT IDK BRO LOL
     // THIS (somehow) WORKS DON'T TOUCH IT
     // -----------------------
@@ -987,15 +1011,13 @@ bool IconOffsetEditorPopup::init() {
         }
     }
 
-    //float bgHeight = partCount * 40.f + 25.f;
     float bgWidth = (isRobotOrSpider) ? 120.f : 60.f;
-    auto partBg = CCScale9Sprite::create("GJ_square01.png");
+    auto partBg = CCScale9Sprite::create("GJ_square02.png");
     partBg->setAnchorPoint({0.f, 0.5f});
     partBg->setContentSize({bgWidth, 200.f});
-    partBg->setPosition({size.width + 25.f, midY});
-    partBg->setOpacity(255);
-    partBg->setID("parts-picker-bg"_spr);
-    this->m_mainLayer->addChild(partBg, -1);
+    partBg->setPosition({winSize.width - bgWidth - 20.f, midY});
+    partBg->setOpacity(120);
+    this->addChild(partBg, -1);
     
     m_partSelectMenu = CCMenu::create();
     if (isRobotOrSpider) {
@@ -1016,12 +1038,12 @@ bool IconOffsetEditorPopup::init() {
     }
     
     float lowerBy = (m_currentIconType == IconType::Ufo) ? 10.f : 0.f;
-    float moveBy = (isRobotOrSpider) ? 60.f : 30.f;
+    float moveBy = (isRobotOrSpider) ? (bgWidth / 2.f) : (bgWidth / 2.f);
     m_partSelectMenu->setPosition({partBg->getPositionX() + moveBy, midY - lowerBy});
     m_partSelectMenu->setContentSize({m_partSelectMenu->getContentSize().width, 105.f});
     m_partSelectMenu->setScale(1.75f);
     m_partSelectMenu->setID("part-select-menu"_spr);
-    this->m_mainLayer->addChild(m_partSelectMenu, 2);
+    this->addChild(m_partSelectMenu, 2);
     
     if (isRobotOrSpider) {
         for (int i = 0; i < m_frameNames.size(); i++) {
@@ -1039,7 +1061,7 @@ bool IconOffsetEditorPopup::init() {
             auto button = CCMenuItemSpriteExtra::create(
                 buttonSprite,
                 this,
-                menu_selector(IconOffsetEditorPopup::onPartSelected)
+                menu_selector(ConstructLayer::onPartSelected)
             );
             button->setTag(i);
             button->setUserObject("frame-name"_spr, CCString::create(frameName));
@@ -1070,7 +1092,7 @@ bool IconOffsetEditorPopup::init() {
             auto button = CCMenuItemSpriteExtra::create(
                 buttonSprite,
                 this,
-                menu_selector(IconOffsetEditorPopup::onPartSelected)
+                menu_selector(ConstructLayer::onPartSelected)
             );
             button->setTag(static_cast<int>(part));
             button->setUserObject("part-sprite"_spr, CCString::create(tooltip));
@@ -1109,12 +1131,35 @@ bool IconOffsetEditorPopup::init() {
     return true;
 }
 
-void IconOffsetEditorPopup::updatePreviewPlayer() {
+void ConstructLayer::onClose(CCObject* sender) {
+
+    if (GJGarageLayer* garageLayer = GJGarageLayer::node()) {
+        auto gameManager = GameManager::sharedState();
+        auto player1 = garageLayer->m_playerObject;
+        auto iconType1 = gameManager->m_playerIconType;
+        more_icons::updateSimplePlayer(player1, iconType1, false);
+
+        if (auto separateDualIcons = Loader::get()->getLoadedMod("weebify.separate_dual_icons")) {
+            auto player2 = static_cast<SimplePlayer*>(garageLayer->getChildByID("player2-icon"));
+            auto iconType2 = static_cast<IconType>(separateDualIcons->getSavedValue("lastmode", 0));
+            more_icons::updateSimplePlayer(player2, iconType2, true);
+        }
+
+        garageLayer->selectTab(garageLayer->m_iconType);
+    }
+    CCDirector::sharedDirector()->pushScene(CCTransitionFade::create(0.5f, GJGarageLayer::scene()));
+}
+
+void ConstructLayer::keyBackClicked() {
+    onClose(nullptr);
+}
+
+void ConstructLayer::updatePreviewPlayer() {
     if (!m_previewPlayer) return;
     updatePreviewIcon(m_previewPlayer, m_currentIconType);
 }
 
-CCSprite* IconOffsetEditorPopup::getCurrentSelectedSprite() {
+CCSprite* ConstructLayer::getCurrentSelectedSprite() {
     if (!m_previewPlayer) return nullptr;
     
     if (m_currentIconType != IconType::Robot && m_currentIconType != IconType::Spider) {
@@ -1142,7 +1187,7 @@ CCSprite* IconOffsetEditorPopup::getCurrentSelectedSprite() {
     return nullptr;
 }
 
-std::string IconOffsetEditorPopup::getCurrentRealFrameName() {
+std::string ConstructLayer::getCurrentRealFrameName() {
     if (m_currentIconType == IconType::Robot || m_currentIconType == IconType::Spider) {
         return getRealFrameName(m_currentFrameName);
     }
@@ -1201,7 +1246,7 @@ std::string IconOffsetEditorPopup::getCurrentRealFrameName() {
     return "";
 }
 
-void IconOffsetEditorPopup::updateInputFields() {
+void ConstructLayer::updateInputFields() {
     std::string realFrameName = getCurrentRealFrameName();
     
     if (realFrameName.empty()) {
@@ -1236,7 +1281,7 @@ void IconOffsetEditorPopup::updateInputFields() {
     }
 }
 
-void IconOffsetEditorPopup::onPartSelected(CCObject* sender) {
+void ConstructLayer::onPartSelected(CCObject* sender) {
     auto button = static_cast<CCMenuItemSpriteExtra*>(sender);
     if (!button) return;
     
@@ -1253,15 +1298,15 @@ void IconOffsetEditorPopup::onPartSelected(CCObject* sender) {
     highlightSelectedButton();
 }
 
-void IconOffsetEditorPopup::onInfoButton(CCObject* sender) {
+void ConstructLayer::onInfoButton(CCObject* sender) {
     MDPopup::create("Icon Construct Info", infoStr, "OK")->show();
 }
 
-void IconOffsetEditorPopup::onWhy(CCObject* sender) {
+void ConstructLayer::onWhy(CCObject* sender) {
     MDPopup::create("Icon Construct Info", whyStr, "OK")->show();
 }
 
-void IconOffsetEditorPopup::onToggleGlow(CCObject* sender) {
+void ConstructLayer::onToggleGlow(CCObject* sender) {
 
     if (m_currentIconType == IconType::Robot || m_currentIconType == IconType::Spider) {
         auto robotSprite = (m_currentIconType == IconType::Robot) ? 
@@ -1280,7 +1325,7 @@ void IconOffsetEditorPopup::onToggleGlow(CCObject* sender) {
     }
 }
 
-void IconOffsetEditorPopup::drawHitbox() {
+void ConstructLayer::drawHitbox() {
     if (!m_hitboxDrawNode || !m_previewPlayer) return;
     
     m_hitboxDrawNode->clear();
@@ -1317,7 +1362,7 @@ void IconOffsetEditorPopup::drawHitbox() {
     m_hitboxDrawNode->drawPolygon(vertices.data(), 4, fillColor, borderSize, borderColor);
 }
 
-void IconOffsetEditorPopup::onToggleHitbox(CCObject* sender) {
+void ConstructLayer::onToggleHitbox(CCObject* sender) {
     m_showHitbox = !m_showHitbox;
     
     if (m_hitboxDrawNode) {
@@ -1325,7 +1370,7 @@ void IconOffsetEditorPopup::onToggleHitbox(CCObject* sender) {
     }
 }
 
-void IconOffsetEditorPopup::onPlayAnimation(CCObject* sender) {
+void ConstructLayer::onPlayAnimation(CCObject* sender) {
     auto btn = static_cast<CCMenuItemSpriteExtra*>(sender);
     auto animName = typeinfo_cast<CCString*>(btn->getUserObject("anim-name"_spr));
     if (!animName) return;
@@ -1337,7 +1382,7 @@ void IconOffsetEditorPopup::onPlayAnimation(CCObject* sender) {
     }
 }
 
-void IconOffsetEditorPopup::onPlayBallRotation(CCObject* sender) {
+void ConstructLayer::onPlayBallRotation(CCObject* sender) {
     if (!m_previewPlayer) return;
     
     m_previewPlayer->stopAllActions();
@@ -1352,7 +1397,7 @@ void IconOffsetEditorPopup::onPlayBallRotation(CCObject* sender) {
     m_isRotating = true;
 }
 
-void IconOffsetEditorPopup::onStopBallRotation(CCObject* sender) {
+void ConstructLayer::onStopBallRotation(CCObject* sender) {
     if (!m_previewPlayer) return;
     
     m_previewPlayer->stopAllActions();
@@ -1360,14 +1405,14 @@ void IconOffsetEditorPopup::onStopBallRotation(CCObject* sender) {
     m_isRotating = false;
 }
 
-void IconOffsetEditorPopup::onRotationSpeedChanged(CCObject* sender) {
+void ConstructLayer::onRotationSpeedChanged(CCObject* sender) {
     float speed = 0.1f + (m_rotationSpeedSlider->getValue() * 1.9f);
     
     if (m_rotationSpeedLabel) m_rotationSpeedLabel->setString(fmt::format("{:.1f}s", speed).c_str());
     if (m_isRotating) onPlayBallRotation(nullptr);
 }
 
-void IconOffsetEditorPopup::onExtraPreviewOpacityChanged(CCObject* sender) {
+void ConstructLayer::onExtraPreviewOpacityChanged(CCObject* sender) {
     bool isRiderMode = (m_currentIconType == IconType::Ship || m_currentIconType == IconType::Ufo || m_currentIconType == IconType::Jetpack);
     
     float opacity = m_cubeOpacitySlider->getValue();
@@ -1385,7 +1430,7 @@ void IconOffsetEditorPopup::onExtraPreviewOpacityChanged(CCObject* sender) {
     if (m_cubeOpacityLabel) m_cubeOpacityLabel->setString(fmt::format("{}%", static_cast<int>(opacity * 100)).c_str());
 }
 
-CCMenuItemSpriteExtra* IconOffsetEditorPopup::createColorPickerButton(const std::string& colorId, ccColor3B currentColor) {
+CCMenuItemSpriteExtra* ConstructLayer::createColorPickerButton(const std::string& colorId, ccColor3B currentColor) {
     auto colorSprite = CCSprite::createWithSpriteFrameName("GJ_colorBtn_001.png");
     colorSprite->setColor(currentColor);
     colorSprite->setScale(0.7f);
@@ -1393,7 +1438,7 @@ CCMenuItemSpriteExtra* IconOffsetEditorPopup::createColorPickerButton(const std:
     auto button = CCMenuItemSpriteExtra::create(
         colorSprite,
         this,
-        menu_selector(IconOffsetEditorPopup::onColorPicker)
+        menu_selector(ConstructLayer::onColorPicker)
     );
     
     button->setUserObject("color-id"_spr, CCString::create(colorId));
@@ -1402,7 +1447,7 @@ CCMenuItemSpriteExtra* IconOffsetEditorPopup::createColorPickerButton(const std:
     return button;
 }
 
-void IconOffsetEditorPopup::onColorPicker(CCObject* sender) {
+void ConstructLayer::onColorPicker(CCObject* sender) {
     auto menuItem = static_cast<CCMenuItemSpriteExtra*>(sender);
     if (!menuItem) return;
     
@@ -1429,7 +1474,7 @@ void IconOffsetEditorPopup::onColorPicker(CCObject* sender) {
     colorPopup->show();
 }
 
-void IconOffsetEditorPopup::updateColor(cocos2d::ccColor4B const& color) {
+void ConstructLayer::updateColor(cocos2d::ccColor4B const& color) {
     if (m_currentColorSettingId.empty()) return;
     
     ccColor3B color3B = {color.r, color.g, color.b};
@@ -1451,7 +1496,7 @@ void IconOffsetEditorPopup::updateColor(cocos2d::ccColor4B const& color) {
     log::info("Updated {} to ({}, {}, {})", m_currentColorSettingId, color.r, color.g, color.b);
 }
 
-void IconOffsetEditorPopup::applyPreviewColors() {
+void ConstructLayer::applyPreviewColors() {
     if (!m_previewPlayer) return;
     
     if (m_currentIconType == IconType::Robot || m_currentIconType == IconType::Spider) {
@@ -1478,7 +1523,7 @@ void IconOffsetEditorPopup::applyPreviewColors() {
     }
 }
 
-void IconOffsetEditorPopup::highlightSelectedButton() {
+void ConstructLayer::highlightSelectedButton() {
     bool isRobotOrSpider = (m_currentIconType == IconType::Robot || m_currentIconType == IconType::Spider);
     
     if (isRobotOrSpider) {
@@ -1522,7 +1567,7 @@ void IconOffsetEditorPopup::highlightSelectedButton() {
     }
 }
 
-void IconOffsetEditorPopup::onUpdateOffsets(CCObject* sender) {
+void ConstructLayer::onUpdateOffsets(CCObject* sender) {
     float offsetX = 0.0f;
     float offsetY = 0.0f;
     
@@ -1582,11 +1627,11 @@ void IconOffsetEditorPopup::onUpdateOffsets(CCObject* sender) {
     log::info("Updated offset for frame '{}' to ({}, {})", realFrameName, offsetX, offsetY);
 }
 
-void IconOffsetEditorPopup::onSavePlist(CCObject* sender) {
+void ConstructLayer::onSavePlist(CCObject* sender) {
     processPlistSave(false);
 }
 
-void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
+void ConstructLayer::processPlistSave(bool remapNames) {
     bool backupWasMade;
 
     if (m_modifiedOffsets.empty()) {
@@ -1922,12 +1967,12 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
     m_modifiedOffsets.clear();
 }
 
-void IconOffsetEditorPopup::addToLog(const std::string& logMsg, int newLines) {
+void ConstructLayer::addToLog(const std::string& logMsg, int newLines) {
     for (int i = 0; i < newLines; ++i) m_logStream.push_back('\n');
     fmt::format_to(std::back_inserter(m_logStream), "{}\n", logMsg);
 }
 
-CCImage* IconOffsetEditorPopup::getIconImage() {
+CCImage* ConstructLayer::getIconImage() {
     if (!m_previewPlayer || !m_iconContainerNode) {
         log::error("Preview player or container node is null");
         return nullptr;
@@ -2018,7 +2063,7 @@ CCImage* IconOffsetEditorPopup::getIconImage() {
     return image;
 }
 
-void IconOffsetEditorPopup::onRenderIcon(CCObject* sender) {
+void ConstructLayer::onRenderIcon(CCObject* sender) {
     auto icInfo = more_icons::activeIcon(m_currentIconType);
     if (!icInfo) {
         FLAlertLayer::create("Error", "Couldn't get icon info!", "aw :(")->show();
@@ -2068,15 +2113,15 @@ void IconOffsetEditorPopup::onRenderIcon(CCObject* sender) {
     }
 }
 
-void IconOffsetEditorPopup::onOpenRendersFolder(CCObject* sender) {
+void ConstructLayer::onOpenRendersFolder(CCObject* sender) {
     geode::utils::file::openFolder(Mod::get()->getSettingValue<std::filesystem::path>("renders-path"));
 }
 
-void IconOffsetEditorPopup::onModSettings(CCObject* sender) {
+void ConstructLayer::onModSettings(CCObject* sender) {
     geode::openSettingsPopup(Mod::get());
 }
 
-void IconOffsetEditorPopup::mapRobotSpiderSprites(CCNode* node) {
+void ConstructLayer::mapRobotSpiderSprites(CCNode* node) {
     if (!node) return;
     
     static int depth = 0;
@@ -2171,7 +2216,7 @@ void IconOffsetEditorPopup::mapRobotSpiderSprites(CCNode* node) {
     depth--;
 }
 
-void IconOffsetEditorPopup::applyOffsetToAllMatchingSprites(CCNode* node, const std::string& frameName, CCPoint offset) {
+void ConstructLayer::applyOffsetToAllMatchingSprites(CCNode* node, const std::string& frameName, CCPoint offset) {
     if (m_currentIconType == IconType::Robot || m_currentIconType == IconType::Spider) {
         if (m_robotSpiderSprites.count(frameName)) {
             auto& sprites = m_robotSpiderSprites[frameName];
@@ -2192,7 +2237,7 @@ void IconOffsetEditorPopup::applyOffsetToAllMatchingSprites(CCNode* node, const 
     }
 }
 
-void IconOffsetEditorPopup::onAddToOffsetX(CCObject* sender) {
+void ConstructLayer::onAddToOffsetX(CCObject* sender) {
     AddValuePopup::create([this](float value) {
         float currentX = 0.0f;
         std::string xStr = m_inputX->getString();
@@ -2213,7 +2258,7 @@ void IconOffsetEditorPopup::onAddToOffsetX(CCObject* sender) {
     }, true)->show();
 }
 
-void IconOffsetEditorPopup::onAddToOffsetY(CCObject* sender) {
+void ConstructLayer::onAddToOffsetY(CCObject* sender) {
     AddValuePopup::create([this](float value) {
         float currentY = 0.0f;
         std::string yStr = m_inputY->getString();
@@ -2234,14 +2279,15 @@ void IconOffsetEditorPopup::onAddToOffsetY(CCObject* sender) {
     }, false)->show();
 }
 
-void IconOffsetEditorPopup::onHitboxOpacityChanged(CCObject* sender) {
+void ConstructLayer::onHitboxOpacityChanged(CCObject* sender) {
     m_hitboxOpacity = m_hitboxOpacitySlider->getValue();
     
     if (m_hitboxOpacityLabel) m_hitboxOpacityLabel->setString(fmt::format("{}%", static_cast<int>(m_hitboxOpacity * 100)).c_str());
     if (m_showHitbox) drawHitbox();
 }
 
-void IconOffsetEditorPopup::onClose(CCObject* sender) {
+/*
+void ConstructLayer::onClose(CCObject* sender) {
     Popup::onClose(sender);
 
     if (auto garageLayer = static_cast<GJGarageLayer*>(CCDirector::sharedDirector()->getRunningScene()->getChildByID("GJGarageLayer"))) {
@@ -2259,6 +2305,7 @@ void IconOffsetEditorPopup::onClose(CCObject* sender) {
         garageLayer->selectTab(garageLayer->m_iconType);
     }
 }
+*/
 
 class $modify(OffsetEditorGarageLayer, GJGarageLayer) {
     bool init() {
@@ -2288,6 +2335,7 @@ class $modify(OffsetEditorGarageLayer, GJGarageLayer) {
     }
     
     void onOpenOffsetEditor(CCObject* sender) {
-        IconOffsetEditorPopup::create()->show();
+        auto constructLayer = ConstructLayer::scene();
+        CCDirector::sharedDirector()->pushScene(CCTransitionFade::create(0.5f, constructLayer));
     }
 };

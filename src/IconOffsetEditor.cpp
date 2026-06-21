@@ -175,6 +175,32 @@ std::string getRealFrameName(const std::string& fullFrameName) {
     return result;
 }
 
+std::string getPreservedSuffix(const std::string& frameName, IconType type) {
+    // @geode-ignore(unknown-resource)
+    if (!frameName.ends_with("_001.png")) return "";
+    std::string_view end(frameName.data(), frameName.size() - 8);
+
+    if (type == IconType::Robot || type == IconType::Spider) {
+        constexpr const char* endings[] = {"_01_2", "_02_2", "_03_2", "_04_2", "_01_extra", "_01_glow", "_02_glow", "_03_glow", "_04_glow", "_01", "_02", "_03", "_04"};
+        for (auto ending : endings) {
+            if (end.ends_with(ending)) return frameName.substr(frameName.size() - 8 - std::string_view(ending).size());
+        }
+    } else if (type == IconType::Ufo) {
+        constexpr const char* endings[] = {"_2", "_3", "_extra", "_glow"};
+        for (auto ending : endings) {
+            if (end.ends_with(ending)) return frameName.substr(frameName.size() - 8 - std::string_view(ending).size());
+        }
+    } else {
+        constexpr const char* endings[] = {"_2", "_extra", "_glow"};
+        for (auto ending : endings) {
+            if (end.ends_with(ending)) return frameName.substr(frameName.size() - 8 - std::string_view(ending).size());
+        }
+    }
+    
+    // Fallback to just the base suffix
+    return frameName.substr(frameName.size() - 8); 
+}
+
 int getPrefixLen(IconType type) {
     switch(type) {
         case IconType::Ufo:
@@ -1587,7 +1613,7 @@ void IconOffsetEditorPopup::onSavePlist(CCObject* sender) {
 }
 
 void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
-    bool backupWasMade;
+    bool backupWasMade = false;
 
     if (m_modifiedOffsets.empty()) {
         FLAlertLayer::create("No Changes", "<cr>You haven't changed any offsets yet!</c> There's nothing to modify in your plist.\nMake some changes before applying!", "OK")->show();
@@ -1630,16 +1656,17 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
 
     std::string plistContent = readResult.unwrap();
 
-    if (!remapNames) {
-        auto backupResult = utils::file::writeString(backupPath, plistContent);
-        if (!backupResult) {
-            backupWasMade = false;
-            addToLog(fmt::format("<cy>Warning:</c> Failed to create plist backup at {}.", backupPath), 2);
-        } else {
-            backupWasMade = true;
+    std::vector<std::string> plistKeys;
+    size_t keyPos = plistContent.find("<key>");
+    while (keyPos != std::string::npos) {
+        size_t endPos = plistContent.find("</key>", keyPos);
+        if (endPos != std::string::npos) {
+            std::string key = plistContent.substr(keyPos + 5, endPos - (keyPos + 5));
+            if (key.ends_with(".png")) {
+                plistKeys.push_back(key);
+            }
         }
-    } else {
-        backupWasMade = std::filesystem::exists(backupPath);
+        keyPos = plistContent.find("<key>", keyPos + 1);
     }
 
     addToLog("---", 2);
@@ -1651,97 +1678,54 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
     std::vector<std::string> failedUpdates;
     std::vector<std::string> notFoundFrames;
 
-    std::string iconShortName = icInfo->getShortName();
-    std::string internalFrameName = "";
+    for (const auto& [frameName, offset] : m_modifiedOffsets) {
+        std::string searchFrameName = frameName;
 
-    if (remapNames && !iconShortName.empty()) {
-        addToLog("<cy>[REMAPPING]</c> Trying to find internal frame name in plist...", 2);
-        
-        // @geode-ignore(unknown-resource)
-        std::string_view searchPattern = "_001.png";
-        // @geode-ignore(unknown-resource)
-        if (m_currentIconType == IconType::Robot || m_currentIconType == IconType::Spider) searchPattern = "_01_001.png";
-        size_t searchPos = plistContent.find(searchPattern);
+        if (std::find(plistKeys.begin(), plistKeys.end(), frameName) != plistKeys.end()) {
+            searchFrameName = frameName;
+        } else {
+            std::string suffix = getPreservedSuffix(frameName, m_currentIconType);
+            std::vector<std::string> candidates;
 
-        addToLog(fmt::format("<cy>[REMAPPING]</c> Looking for: {} to find internal frame name...", searchPattern), 2);
-        
-        if (searchPos != std::string::npos) {
-            size_t keyStart = plistContent.rfind("<key>", searchPos);
-            if (keyStart != std::string::npos) {
-                size_t keyEnd = plistContent.find("</key>", keyStart);
-                if (keyEnd != std::string::npos) {
-                    std::string fullFrameName = plistContent.substr(keyStart + 5, keyEnd - (keyStart + 5));
-                    
-                    if (fullFrameName.length() > searchPattern.length()) {
-                        internalFrameName = fullFrameName.substr(0, fullFrameName.length() - searchPattern.length());
-                        addToLog(fmt::format("<cg>[REMAPPING]</c> Found internal frame name: `{}`", internalFrameName), 2);
-                        addToLog(fmt::format("<cy>[REMAPPING]</c> Replacing `{}` with `{}` to find frame names in plist.", iconShortName, internalFrameName), 2);
-                    }
+            for (const auto& key : plistKeys) {
+                if (key.ends_with(suffix)) {
+                    candidates.push_back(key);
                 }
             }
-        }
-        
-        if (internalFrameName.empty()) {
-            addToLog("<cr>[ERROR]</c> Could not detect internal frame name from plist!", 2);
-            addToLog("The plist may not contain any frames with the standard naming pattern.", 1);
-            
-            constexpr const char* errorMsg = "## <cr>Internal Frame Name Not Found!</c>\n\n"
-                "Could not detect the internal frame name from the plist file.\n\n"
-                "<cp>This probably means:</c>\n"
-                "- Your icon's plist doesn't have any standard-named frames. (aka, `iconPart.png` instead of `iconPart_001.png`)\n"
-                "- Your plist's structure is corrupted or invalid.\n\n"
-                "**<cl>What do i do?</c>** - Try manually renaming the frames in your plist to match your icon's renamed name. Or, just manually change the offsets to whatever you found nice in the Workbench.";
-            
-            geode::MDPopup::create(
-                "Remapping Failed",
-                errorMsg,
-                "OK", nullptr,
-                [](bool) {}
-            )->show();
-            return;
-        }
-        
-        addToLog("---", 1);
-    }
 
-    for (const auto& [frameName, offset] : m_modifiedOffsets) {
-        std::string unfuckedFrameName = frameName.substr(getPrefixLen(m_currentIconType));
-        std::string searchFrameName = unfuckedFrameName;
-        
-        if (remapNames && !internalFrameName.empty() && !iconShortName.empty()) {
-            if (unfuckedFrameName.length() > iconShortName.length() && 
-                unfuckedFrameName.substr(0, iconShortName.length()) == iconShortName) {
-                
-                std::string suffix = unfuckedFrameName.substr(iconShortName.length());
-                
-                searchFrameName = internalFrameName + suffix;
-                
-                addToLog(fmt::format("<cy>[REMAPPED]</c> `{}` <cl>-></c> `{}`", unfuckedFrameName, searchFrameName), 1);
+            if (!candidates.empty()) {
+                searchFrameName = candidates[0]; 
+
+                if (remapNames) {
+                    addToLog(fmt::format("<cy>[SMART REMAP]</c> `{}` <cl>-></c> `{}`", frameName, searchFrameName), 1);
+                }
+            } else {
+                searchFrameName = frameName.substr(getPrefixLen(m_currentIconType));
             }
         }
-        
+
         std::string frameKey = fmt::format("<key>{}</key>", searchFrameName);
         size_t framePos = plistContent.find(frameKey);
 
         if (framePos == std::string::npos) {
             if (!remapNames) {
-                notFoundFrames.push_back(unfuckedFrameName);
+                notFoundFrames.push_back(searchFrameName);
                 notFoundCount++;
             } else {
-                failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> frame **{}** (remapped to `{}`) not found in plist even after remapping.", unfuckedFrameName, searchFrameName));
+                failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> frame **{}** (remapped to `{}`) not found in plist even after remapping.", searchFrameName, searchFrameName));
             }
             continue;
         }
 
         size_t frameDictStart = plistContent.find("<dict>", framePos);
         if (frameDictStart == std::string::npos) {
-            failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> opening <dict> for frame **{}** not found.", unfuckedFrameName));
+            failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> opening <dict> for frame **{}** not found.", searchFrameName));
             continue;
         }
 
         size_t frameDictEnd = plistContent.find("</dict>", frameDictStart);
         if (frameDictEnd == std::string::npos) {
-            failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> closing </dict> for frame **{}** not found.", unfuckedFrameName));
+            failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> closing </dict> for frame **{}** not found.", searchFrameName));
             continue;
         }
 
@@ -1752,7 +1736,7 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
         size_t offsetKeyPos = frameSection.find("<key>spriteOffset</key>");
 
         if (offsetKeyPos == std::string::npos) {
-            failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> spriteOffset for frame **{}** not found.", unfuckedFrameName));
+            failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> spriteOffset for frame **{}** not found.", searchFrameName));
             continue;
         }
 
@@ -1763,7 +1747,7 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
 
         if (stringStart == std::string::npos || stringEnd == std::string::npos ||
             stringStart > frameDictEnd || stringEnd > frameDictEnd) {
-            failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> spriteOffset string tags for frame **{}** not found.", unfuckedFrameName));
+            failedUpdates.push_back(fmt::format("<cr>[ERROR]</c> spriteOffset string tags for frame **{}** not found.", searchFrameName));
             continue;
         }
 
@@ -1778,14 +1762,13 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
         );
 
         if (remapNames) {
-            successfulUpdates.push_back(fmt::format("**{}** <cl>-></c> `{}`: `{}`", unfuckedFrameName, searchFrameName, newOffsetStr));
+            successfulUpdates.push_back(fmt::format("**{}** <cl>-></c> `{}`: `{}`", searchFrameName, searchFrameName, newOffsetStr));
         } else {
-            successfulUpdates.push_back(fmt::format("**{}**: `{}`", unfuckedFrameName, newOffsetStr));
+            successfulUpdates.push_back(fmt::format("**{}**: `{}`", searchFrameName, newOffsetStr));
         }
         updatedCount++;
     }
 
-    // no voy a traducir esto a la chingada
     if (!remapNames && notFoundCount > 0 && notFoundCount == m_modifiedOffsets.size()) {
         fmt::memory_buffer retryMsg;
         fmt::format_to(std::back_inserter(retryMsg), "# <cr>Frames Not Found.</c>\n\n");
@@ -1893,10 +1876,9 @@ void IconOffsetEditorPopup::processPlistSave(bool remapNames) {
     
     if (remapNames) {
         addToLog("---", 2);
-        addToLog("<cy>**Frame Name Remapping was used**</c>", 2);
-        addToLog(fmt::format("Found icon internal name: `{}`", internalFrameName), 1);
-        addToLog(fmt::format("Replaced `{}` with `{}` in all frame searches.", iconShortName, internalFrameName), 1);
-        addToLog("If anything goes wrong or your icon looks bad after these changes, you can restore from the created backup file ", 1);
+        addToLog("<cy>**Smart Frame Name Remapping was used**</c>", 2);
+        addToLog("Automatically detected and mapped structural suffixes to bypass MoreIcons prefixing.", 1);
+        addToLog("If anything goes wrong or your icon looks bad after these changes, you can restore from the created backup file.", 1);
     }
     
     if (backupWasMade) {

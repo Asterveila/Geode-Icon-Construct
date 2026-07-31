@@ -1,3 +1,6 @@
+# v1.4.2
+- HOPEFULLY *ACTUALLY* fixed plist editing being broken sometimes.
+
 # v1.4.1
 - Fixed plist editing being broken with More Icons' latest update.
 

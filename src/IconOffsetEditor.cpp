@@ -764,7 +764,7 @@ bool IconOffsetEditorPopup::init() {
     m_partScrollLayer->ignoreAnchorPointForPosition(false);
     m_partScrollLayer->setAnchorPoint({1.f, 0.5f});
     m_partScrollLayer->setPosition({size.width - 15.f, midY});
-    this->m_mainLayer->addChild(m_partScrollLayer);
+    this->m_mainLayer->addChild(m_partScrollLayer, 1);
 
     setupPartScrollLayer();
 

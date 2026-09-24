@@ -85,3 +85,194 @@ De todos modos, el publico principal al que se dirige el mod son los **creadores
 En cualquier caso, si estas creando un paquete de iconos Vanilla, te recomiendo que actives la configuracion "Cargar desde paquetes de iconos tradicionales" de More Icons, al menos temporalmente. Esto cargara los iconos de los paquetes de iconos Vanilla como si fueran iconos anadidos por More Icons y, por lo tanto, DEBERiAS poder editarlos a traves de Icon Construct. Segun mis pruebas, esto FUNCIONA, ¡asi que tambien deberia funcionar para ti!)";
 
 constexpr int FALLBACK_TAG = 105871529;
+
+namespace UIUtils {
+    inline CCNode* column(float gap = 4.f, AxisAlignment axisAlign = AxisAlignment::Start, AxisAlignment crossAlign = AxisAlignment::Start, bool growCross = false, const char* id = nullptr) {
+        auto node = CCNode::create();
+        node->setContentSize({0.f, 0.f});
+        node->setAnchorPoint({0.5f, 0.5f});
+        node->setLayout(
+            ColumnLayout::create()
+                ->setGap(gap)
+                ->setAxisAlignment(axisAlign)
+                ->setCrossAxisLineAlignment(crossAlign)
+                ->setAxisReverse(true)
+                ->setAutoScale(false)
+                ->setAutoGrowAxis(true)
+                ->setGrowCrossAxis(growCross)
+        );
+        if (id) node->setID(id);
+        return node;
+    }
+
+    inline CCNode* row(float gap = 4.f, AxisAlignment axisAlign = AxisAlignment::Start, AxisAlignment crossAlign = AxisAlignment::Center, bool growCross = false, const char* id = nullptr) {
+        auto node = CCNode::create();
+        node->setContentSize({0.f, 0.f});
+        node->setAnchorPoint({0.5f, 0.5f});
+        node->setLayout(
+            RowLayout::create()
+                ->setGap(gap)
+                ->setAxisAlignment(axisAlign)
+                ->setCrossAxisAlignment(crossAlign)
+                ->setAutoScale(false)
+                ->setAutoGrowAxis(true)
+                ->setGrowCrossAxis(growCross)
+        );
+        if (id) node->setID(id);
+        return node;
+    }
+
+    struct TogglerRow {
+        CCMenu* container;
+        CCMenuItemToggler* toggler;
+    };
+
+    inline TogglerRow togglerRow(const std::string& labelText, bool initialState, CCObject* target, SEL_MenuHandler selector, float width = 140.f, float labelScale = 0.4f, float togglerScale = 0.7f, const char* id = nullptr) {
+        auto menu = CCMenu::create();
+        menu->setContentSize({width, 20.f});
+        menu->setLayout(
+            RowLayout::create()
+                ->setAxisAlignment(AxisAlignment::Start)
+                ->setCrossAxisAlignment(AxisAlignment::Center)
+                ->setAutoScale(false)
+                ->setGrowCrossAxis(true)
+                ->setAxisReverse(true)
+        );
+
+        auto label = CCLabelBMFont::create(labelText.c_str(), "bigFont.fnt");
+        label->setScale(labelScale);
+        label->setAnchorPoint({0.f, 0.5f});
+        menu->addChild(label);
+
+        auto offSpr = CCSprite::createWithSpriteFrameName("GJ_checkOff_001.png");
+        auto onSpr = CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png");
+        auto toggler = CCMenuItemToggler::create(offSpr, onSpr, target, selector);
+        toggler->toggle(initialState);
+        toggler->setScale(togglerScale);
+        menu->addChild(toggler);
+
+        menu->updateLayout();
+        if (id) menu->setID(id);
+
+        return {menu, toggler};
+    }
+
+    struct ColorPickerRow {
+        CCMenu* container;
+        CCMenuItemSpriteExtra* button;
+        CCSprite* swatch;
+    };
+
+    inline ColorPickerRow colorPickerRow(const std::string& labelText, ccColor3B initialColor, CCObject* target, SEL_MenuHandler selector, float width = 100.f, float labelScale = 0.4f, const char* id = nullptr) {
+        auto menu = CCMenu::create();
+        menu->setContentSize({width, 20.f});
+        menu->setLayout(
+            RowLayout::create()
+                ->setGap(1.f)
+                ->setAxisAlignment(AxisAlignment::Start)
+                ->setCrossAxisAlignment(AxisAlignment::Center)
+                ->setAutoScale(false)
+                ->setAutoGrowAxis(true)
+                ->setAxisReverse(true)
+        );
+
+        auto label = CCLabelBMFont::create(labelText.c_str(), "bigFont.fnt");
+        label->setScale(labelScale);
+        label->setAnchorPoint({0.f, 0.5f});
+        menu->addChild(label);
+
+        auto swatch = CCSprite::createWithSpriteFrameName("GJ_colorBtn_001.png");
+        swatch->setColor(initialColor);
+
+        auto button = CCMenuItemSpriteExtra::create(swatch, target, selector);
+        button->setScale(0.55f);
+        menu->addChild(button);
+
+        menu->updateLayout();
+        if (id) menu->setID(id);
+
+        return {menu, button, swatch};
+    }
+
+    struct OffsetRow {
+        CCNode* container;
+        geode::TextInput* input;
+        CCMenuItemSpriteExtra* nudgeDownBtn;
+        CCMenuItemSpriteExtra* nudgeUpBtn;
+        CCMenuItemSpriteExtra* addBtn;
+    };
+
+    inline OffsetRow offsetRow(const std::string& labelText, CCObject* target, SEL_MenuHandler nudgeDownSel, SEL_MenuHandler nudgeUpSel, SEL_MenuHandler addSel, float inputWidth = 70.f, const char* idPrefix = nullptr, bool isVertical = false) {
+        auto outer = column(2.f, AxisAlignment::Start, AxisAlignment::Start, true);
+
+        auto topRow = row(4.f, AxisAlignment::Between, AxisAlignment::Center, true);
+        topRow->setContentSize({inputWidth + 40.f, 16.f});
+
+        auto label = CCLabelBMFont::create(labelText.c_str(), "bigFont.fnt");
+        label->setScale(0.4f);
+        label->setAnchorPoint({0.f, 0.5f});
+        topRow->addChild(label);
+
+        // "add to" button
+        auto addSpr = CCSprite::createWithSpriteFrameName("GJ_plus3Btn_001.png");
+        addSpr->setScale(0.5f);
+        auto addBtn = CCMenuItemSpriteExtra::create(addSpr, target, addSel);
+        auto addMenu = CCMenu::create();
+        addMenu->setContentSize(addSpr->getContentSize() * 0.5f);
+        addMenu->setLayout(AnchorLayout::create());
+        addBtn->setLayoutOptions(AnchorLayoutOptions::create()->setAnchor(Anchor::Center));
+        addMenu->addChild(addBtn);
+        addMenu->updateLayout();
+        topRow->addChild(addMenu);
+
+        topRow->updateLayout();
+        outer->addChild(topRow);
+
+        // mobile controls
+        auto inputRow = row(4.f, AxisAlignment::Center, AxisAlignment::Center, false);
+
+        auto downSpr = CCSprite::create("arrowBtnGray.png"_spr);
+        downSpr->setScale(0.6f);
+        auto nudgeDownBtn = CCMenuItemSpriteExtra::create(downSpr, target, nudgeDownSel);
+        auto downMenu = CCMenu::create();
+        downMenu->setContentSize(downSpr->getContentSize() * 0.6f);
+        downMenu->setLayout(AnchorLayout::create());
+        nudgeDownBtn->setLayoutOptions(AnchorLayoutOptions::create()->setAnchor(Anchor::Center));
+        downMenu->addChild(nudgeDownBtn);
+        downMenu->updateLayout();
+        inputRow->addChild(downMenu);
+
+        auto input = geode::TextInput::create(inputWidth, "0.0", "bigFont.fnt");
+        input->setScale(0.85f);
+        input->setFilter("0123456789.-");
+        inputRow->addChild(input);
+
+        auto upSpr = CCSprite::create("arrowBtnGray.png"_spr);
+        upSpr->setScale(0.6f);
+        upSpr->setFlipX(true);
+        auto nudgeUpBtn = CCMenuItemSpriteExtra::create(upSpr, target, nudgeUpSel);
+        auto upMenu = CCMenu::create();
+        upMenu->setContentSize(upSpr->getContentSize() * 0.6f);
+        upMenu->setLayout(AnchorLayout::create());
+        nudgeUpBtn->setLayoutOptions(AnchorLayoutOptions::create()->setAnchor(Anchor::Center));
+        upMenu->addChild(nudgeUpBtn);
+        upMenu->updateLayout();
+        inputRow->addChild(upMenu);
+
+        inputRow->updateLayout();
+        outer->addChild(inputRow);
+
+        outer->updateLayout();
+
+        if (idPrefix) {
+            outer->setID(fmt::format("{}-row", idPrefix));
+            input->setID(fmt::format("{}-input", idPrefix));
+            addBtn->setID(fmt::format("{}-add-btn", idPrefix));
+            nudgeDownBtn->setID(fmt::format("{}-nudge-down", idPrefix));
+            nudgeUpBtn->setID(fmt::format("{}-nudge-up", idPrefix));
+        }
+
+        return {outer, input, nudgeDownBtn, nudgeUpBtn, addBtn};
+    }
+
+}

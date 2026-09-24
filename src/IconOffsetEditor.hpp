@@ -3,6 +3,7 @@
 #include <Geode/Geode.hpp>
 #include <Geode/ui/Popup.hpp>
 #include <Geode/ui/TextInput.hpp>
+#include "IconPartCell.hpp"
 
 using namespace geode::prelude;
 
@@ -24,7 +25,7 @@ class AddValuePopup;
 class IconOffsetEditorPopup : public Popup {
 protected:
     bool init() override;
-    
+
     SimplePlayer* m_previewPlayer = nullptr;
     CCNode* m_iconContainerNode = nullptr;
     CCSprite* m_cubePreview = nullptr;
@@ -36,8 +37,14 @@ protected:
     geode::TextInput* m_inputY = nullptr;
     CCLabelBMFont* m_labelX = nullptr;
     CCLabelBMFont* m_labelY = nullptr;
-    CCMenu* m_partSelectMenu = nullptr;
     CCMenuItemSpriteExtra* m_updateButton = nullptr;
+
+    // -----------------------
+    // PART SCROLL LAYER
+    // -----------------------
+    ScrollLayer* m_partScrollLayer = nullptr;
+    std::map<std::string, IconPartCell*> m_frameCells;
+    std::map<SelectedSpritePart, IconPartCell*> m_partCells;
 
     CCMenu* m_colorPickerMenu = nullptr;
     std::string m_currentColorSettingId;
@@ -46,7 +53,13 @@ protected:
     ccColor3B m_previewColor2;
     ccColor3B m_previewGlowColor;
 
-    CCMenuItemSpriteExtra* m_glowToggler = nullptr;
+    // -----------------------
+    // PREVIEW TOGGLERS
+    // -----------------------
+    CCMenuItemToggler* m_glowToggler = nullptr;
+    CCMenuItemToggler* m_hitboxToggler = nullptr;
+    CCMenuItemToggler* m_trailToggler = nullptr; // unfinished
+
     CCLabelBMFont* m_rotationSpeedLabel = nullptr;
     Slider* m_cubeOpacitySlider = nullptr;
     CCLabelBMFont* m_cubeOpacityLabel = nullptr;
@@ -56,29 +69,28 @@ protected:
     bool m_isRotating = false;
 
     CCDrawNode* m_hitboxDrawNode = nullptr;
-    CCMenuItemSpriteExtra* m_hitboxToggler = nullptr;
     Slider* m_hitboxOpacitySlider = nullptr;
     CCLabelBMFont* m_hitboxOpacityLabel = nullptr;
     float m_hitboxOpacity = 1.0f;
     bool m_showHitbox = false;
-    
+
     SelectedSpritePart m_selectedPart = SelectedSpritePart::FirstLayer;
     IconType m_currentIconType;
-    
+
     std::map<std::string, std::vector<CCSprite*>> m_robotSpiderSprites;
-    std::map<std::string, CCMenuItemSpriteExtra*> m_frameButtons;
-    std::map<SelectedSpritePart, CCMenuItemSpriteExtra*> m_partButtons;
     std::map<std::string, CCPoint> m_modifiedOffsets;
-    
+
     std::vector<std::string> m_frameNames;
     std::string m_currentFrameName;
 
     fmt::memory_buffer m_logStream;
-    
+
     void updatePreviewPlayer();
     void onPartSelected(CCObject* sender);
     void onUpdateOffsets(CCObject* sender);
     void onToggleGlow(CCObject* sender);
+    void onToggleHitbox(CCObject* sender);
+    void onToggleTrail(CCObject* sender);
     void onInfoButton(CCObject* sender);
     void onWhy(CCObject* sender); // :sob:
     void onPlayAnimation(CCObject* sender);
@@ -90,7 +102,6 @@ protected:
     void onModSettings(CCObject* sender);
     void updateInputFields();
     void drawHitbox();
-    void onToggleHitbox(CCObject* sender);
     void onSavePlist(CCObject* sender);
     void onOpenRendersFolder(CCObject* sender);
     void highlightSelectedButton();
@@ -104,14 +115,20 @@ protected:
 
     void onAddToOffsetX(CCObject* sender);
     void onAddToOffsetY(CCObject* sender);
+    void onNudgeOffsetXDown(CCObject* sender);
+    void onNudgeOffsetXUp(CCObject* sender);
+    void onNudgeOffsetYDown(CCObject* sender);
+    void onNudgeOffsetYUp(CCObject* sender);
+    void nudgeOffset(geode::TextInput* input, float delta);
 
     void updateColor(cocos2d::ccColor4B const& color);
     void onHitboxOpacityChanged(CCObject* sender);
     void onColorPicker(CCObject* sender);
     void applyPreviewColors();
-    CCMenuItemSpriteExtra* createColorPickerButton(const std::string& colorId, ccColor3B currentColor);
     void onClose(CCObject* sender) override;
-    
+
+    void setupPartScrollLayer();
+
 public:
     static IconOffsetEditorPopup* create();
 };

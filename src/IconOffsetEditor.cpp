@@ -259,8 +259,8 @@ bool IconOffsetEditorPopup::init() {
     const float midY = size.height / 2.f;
     const float inputX = midX - 40.0f;
     const float inputYTop = midY + 25.0f;
-    const float lowerMenuX = midX - 55.f;
-    const float lowerMenuBaseY = midY - 52.5f;
+    const float lowerMenuX = 78.5;
+    const float lowerMenuBaseY = midY - 70.5f;
 
     // -----------------------
     // DISABLE FOR VANILLA ICONS (L bozo sorry it's easier to work with MI) <- i am no longer sorry fuck you
@@ -321,13 +321,13 @@ bool IconOffsetEditorPopup::init() {
     openFolderBtn->setID("open-renders-folder");
 
     auto topMenu = CCMenu::create();
-    topMenu->setLayout(RowLayout::create()->setGap(3.f)->setAxisAlignment(AxisAlignment::Center)->setAutoScale(false));
+    topMenu->setLayout(RowLayout::create()->setGap(3.f)->setAxisAlignment(AxisAlignment::Center)->setAutoScale(false)->setAutoGrowAxis(true));
     topMenu->addChild(infoBtn);
     topMenu->addChild(openFolderBtn);
     topMenu->addChild(renderBtn);
     topMenu->setID("top-right-menu");
     topMenu->setScale(0.5f);
-    topMenu->setPosition({midX, size.height - 40.f});
+    topMenu->setPosition({midX, size.height - 50.f});
     topMenu->updateLayout();
     this->m_mainLayer->addChild(topMenu);
 
@@ -373,7 +373,7 @@ bool IconOffsetEditorPopup::init() {
     // underlay
     auto containerUnderlay = NineSlice::create("square02_small.png");
     containerUnderlay->setID("icon-container-underlay");
-    containerUnderlay->setOpacity(35);
+    containerUnderlay->setOpacity(50);
     containerUnderlay->setPosition({midX, midY});
     containerUnderlay->setContentSize({50.f * 4.f, 50.f * 3.f});
     this->m_mainLayer->addChild(containerUnderlay, 0);
@@ -400,31 +400,19 @@ bool IconOffsetEditorPopup::init() {
         m_iconContainerNode->addChild(m_cubePreview);
         
         // cube opacity slider
-        auto opacityLabel = CCLabelBMFont::create("Cube Opacity:", "goldFont.fnt");
-        opacityLabel->setPosition({lowerMenuX, lowerMenuBaseY + 15.f});
-        opacityLabel->setScale(0.35f);
-        this->m_mainLayer->addChild(opacityLabel);
-        
-        m_cubeOpacitySlider = Slider::create(
+        auto cubeOpacity = UIUtils::labeledSlider(
+            "Cube Opacity:",
+            1.0f,
+            "100%",
             this,
             menu_selector(IconOffsetEditorPopup::onExtraPreviewOpacityChanged),
-            0.6f
+            0.6f,
+            "cube-opacity"
         );
-        m_cubeOpacitySlider->setValue(1.0f);
-        m_cubeOpacitySlider->m_sliderBar->setContentSize({60.f, m_cubeOpacitySlider->m_sliderBar->getContentSize().height});
-        
-        auto opacityMenu = CCMenu::create();
-        opacityMenu->addChild(m_cubeOpacitySlider);
-        opacityMenu->setPosition({lowerMenuX, lowerMenuBaseY});
-        opacityMenu->setID("cube-opacity-menu");
-        this->m_mainLayer->addChild(opacityMenu);
-        
-        m_cubeOpacityLabel = CCLabelBMFont::create("100%", "bigFont.fnt");
-        m_cubeOpacityLabel->setPosition({lowerMenuX, lowerMenuBaseY - 10.f});
-        m_cubeOpacityLabel->setScale(0.25f);
-        m_cubeOpacityLabel->setOpacity(150);
-        m_cubeOpacityLabel->setID("cube-opacity-label");
-        this->m_mainLayer->addChild(m_cubeOpacityLabel);
+        m_cubeOpacitySlider = cubeOpacity.slider;
+        m_cubeOpacityLabel = cubeOpacity.valueLabel;
+        cubeOpacity.container->setPosition({lowerMenuX, lowerMenuBaseY});
+        this->m_mainLayer->addChild(cubeOpacity.container);
     }
 
     // -----------------------
@@ -458,47 +446,63 @@ bool IconOffsetEditorPopup::init() {
         }
 
         // control fire opacities
-        auto opacityLabel = CCLabelBMFont::create("Swing Fires Opacity:", "goldFont.fnt");
-        opacityLabel->setPosition({lowerMenuX, lowerMenuBaseY + 15.f});
-        opacityLabel->setScale(0.35f);
-        this->m_mainLayer->addChild(opacityLabel);
-        
-        m_cubeOpacitySlider = Slider::create(
+        auto swingOpacity = UIUtils::labeledSlider(
+            "Swing Fires Opacity:",
+            1.0f,
+            "100%",
             this,
             menu_selector(IconOffsetEditorPopup::onExtraPreviewOpacityChanged),
-            0.6f
+            0.6f,
+            "swing-fires-opacity"
         );
-        m_cubeOpacitySlider->setValue(1.0f);
-        m_cubeOpacitySlider->m_sliderBar->setContentSize({60.f, m_cubeOpacitySlider->m_sliderBar->getContentSize().height});
-        
-        auto opacityMenu = CCMenu::create();
-        opacityMenu->addChild(m_cubeOpacitySlider);
-        opacityMenu->setPosition({lowerMenuX, lowerMenuBaseY});
-        opacityMenu->setID("swing-fires-opacity-menu");
-        this->m_mainLayer->addChild(opacityMenu);
-        
-        m_cubeOpacityLabel = CCLabelBMFont::create("100%", "bigFont.fnt");
-        m_cubeOpacityLabel->setPosition({lowerMenuX, lowerMenuBaseY - 10.f});
-        m_cubeOpacityLabel->setScale(0.25f);
-        m_cubeOpacityLabel->setOpacity(150);
-        this->m_mainLayer->addChild(m_cubeOpacityLabel);
+        m_cubeOpacitySlider = swingOpacity.slider;
+        m_cubeOpacityLabel = swingOpacity.valueLabel;
+        swingOpacity.container->setPosition({lowerMenuX, lowerMenuBaseY});
+        this->m_mainLayer->addChild(swingOpacity.container);
     }
+
+    // -----------------------
+    // COLOR PICKER ROWS
+    // -----------------------
+    m_previewColor1 = manager->colorForIdx(manager->getPlayerColor());
+    m_previewColor2 = manager->colorForIdx(manager->getPlayerColor2());
+    m_previewGlowColor = manager->colorForIdx(manager->getPlayerGlowColor());
+
+    auto colorColumn = UIUtils::column(2.5f, AxisAlignment::Even, AxisAlignment::Start, false, "color-picker-column");
+    colorColumn->setAnchorPoint({0.f, 0.5f});
+    colorColumn->setPosition({15.f, midY - 15.f});
+
+    auto color1Row = UIUtils::colorPickerRow("Col 1", m_previewColor1, this, menu_selector(IconOffsetEditorPopup::onColorPicker), 90.f, 0.35f, "color1-row");
+    color1Row.button->setUserObject("color-id"_spr, CCString::create("color1"));
+    colorColumn->addChild(color1Row.container);
+
+    auto color2Row = UIUtils::colorPickerRow("Col 2", m_previewColor2, this, menu_selector(IconOffsetEditorPopup::onColorPicker), 90.f, 0.35f, "color2-row");
+    color2Row.button->setUserObject("color-id"_spr, CCString::create("color2"));
+    colorColumn->addChild(color2Row.container);
+
+    auto glowColorRow = UIUtils::colorPickerRow("Glow", m_previewGlowColor, this, menu_selector(IconOffsetEditorPopup::onColorPicker), 90.f, 0.35f, "glow-color-row");
+    glowColorRow.button->setUserObject("color-id"_spr, CCString::create("glow"));
+    colorColumn->addChild(glowColorRow.container);
+
+    colorColumn->updateLayout();
+    this->m_mainLayer->addChild(colorColumn);
 
     // -----------------------
     // PREVIEW CONTROLS MENU (Glow + Hitbox)
     // -----------------------
-    auto togglersColumn = UIUtils::column(4.f, AxisAlignment::Center, AxisAlignment::Center, false, "preview-togglers-column");
-    togglersColumn->setPosition({midX + 90.f, midY - 70.f});
+    auto togglersColumn = UIUtils::column(4.f, AxisAlignment::Even, AxisAlignment::Center, false, "preview-togglers-column");
+    togglersColumn->setAnchorPoint({0.f, 0.5f});
+    togglersColumn->setPosition({20.f + colorColumn->getContentSize().width, colorColumn->getPositionY()});
 
-    auto glowRow = UIUtils::togglerRow("Glow", true, this, menu_selector(IconOffsetEditorPopup::onToggleGlow), 90.f, 0.35f, 0.6f, "glow-toggler-row");
+    auto glowRow = UIUtils::togglerRow("Glow", true, this, menu_selector(IconOffsetEditorPopup::onToggleGlow), 70.f, 0.35f, 0.6f, "glow-toggler-row");
     m_glowToggler = glowRow.toggler;
     togglersColumn->addChild(glowRow.container);
 
-    auto hitboxRow = UIUtils::togglerRow("Hitbox", false, this, menu_selector(IconOffsetEditorPopup::onToggleHitbox), 90.f, 0.35f, 0.6f, "hitbox-toggler-row");
+    auto hitboxRow = UIUtils::togglerRow("Hitbox", false, this, menu_selector(IconOffsetEditorPopup::onToggleHitbox), 70.f, 0.35f, 0.6f, "hitbox-toggler-row");
     m_hitboxToggler = hitboxRow.toggler;
     togglersColumn->addChild(hitboxRow.container);
 
-    auto trailRow = UIUtils::togglerRow("Trail", false, this, menu_selector(IconOffsetEditorPopup::onToggleTrail), 90.f, 0.35f, 0.6f, "trail-toggler-row");
+    auto trailRow = UIUtils::togglerRow("Trail", false, this, menu_selector(IconOffsetEditorPopup::onToggleTrail), 70.f, 0.35f, 0.6f, "trail-toggler-row");
     m_trailToggler = trailRow.toggler;
     togglersColumn->addChild(trailRow.container);
 
@@ -509,26 +513,20 @@ bool IconOffsetEditorPopup::init() {
     // HITBOX OPACITY
     // -----------------------
     auto hitboxOpacityContainer = UIUtils::column(2.f, AxisAlignment::Center, AxisAlignment::Center, false, "hitbox-opacity-container");
-    hitboxOpacityContainer->setPosition({midX, size.height - 55.f});
+    hitboxOpacityContainer->setPosition({midX, 40.f});
 
-    auto hitboxOpacityLabel = CCLabelBMFont::create("Hitbox Border Opacity:", "goldFont.fnt");
-    hitboxOpacityLabel->setScale(0.35f);
-    hitboxOpacityLabel->setID("hitbox-opacity-label-text");
-    hitboxOpacityContainer->addChild(hitboxOpacityLabel);
-
-    m_hitboxOpacitySlider = Slider::create(this, menu_selector(IconOffsetEditorPopup::onHitboxOpacityChanged), 0.6f);
-    m_hitboxOpacitySlider->setValue(1.0f);
-    m_hitboxOpacitySlider->m_sliderBar->setContentSize({60.f, m_hitboxOpacitySlider->m_sliderBar->getContentSize().height});
-    auto hitboxOpacityMenu = CCMenu::create();
-    hitboxOpacityMenu->addChild(m_hitboxOpacitySlider);
-    hitboxOpacityMenu->setID("hitbox-opacity-menu");
-    hitboxOpacityContainer->addChild(hitboxOpacityMenu);
-
-    m_hitboxOpacityLabel = CCLabelBMFont::create("100%", "bigFont.fnt");
-    m_hitboxOpacityLabel->setScale(0.25f);
-    m_hitboxOpacityLabel->setOpacity(150);
-    m_hitboxOpacityLabel->setID("hitbox-opacity-value-label");
-    hitboxOpacityContainer->addChild(m_hitboxOpacityLabel);
+    auto hitboxSlider = UIUtils::labeledSlider(
+        "Hitbox Border Opacity:",
+        1.0f,
+        "100%",
+        this,
+        menu_selector(IconOffsetEditorPopup::onHitboxOpacityChanged),
+        0.6f,
+        "hitbox-opacity-slider"
+    );
+    m_hitboxOpacitySlider = hitboxSlider.slider;
+    m_hitboxOpacityLabel = hitboxSlider.valueLabel;
+    hitboxOpacityContainer->addChild(hitboxSlider.container);
 
     hitboxOpacityContainer->updateLayout();
     this->m_mainLayer->addChild(hitboxOpacityContainer);
@@ -562,8 +560,14 @@ bool IconOffsetEditorPopup::init() {
     // ROBOT/SPIDER ANIMATIONS MENU
     // -----------------------
     if (isRobotOrSpider) {
+        auto animContainer = UIUtils::column(4.f, AxisAlignment::Center, AxisAlignment::Center, false, "anim-players-container");
+
+        auto animDescLabel = CCLabelBMFont::create("Test Animations", "goldFont.fnt");
+        animDescLabel->setScale(0.4f);
+        animDescLabel->setID("test-animations-label");
+        animContainer->addChild(animDescLabel);
+
         m_animButtonsMenu = CCMenu::create();
-        m_animButtonsMenu->setPosition({lowerMenuX, lowerMenuBaseY - 5.f});
         m_animButtonsMenu->setScale(0.6f);
         m_animButtonsMenu->setContentSize({200.f, 40.f});
         m_animButtonsMenu->setID("animation-players-menu");
@@ -573,20 +577,14 @@ bool IconOffsetEditorPopup::init() {
                 ->setAxisAlignment(AxisAlignment::Center)
                 ->setAxisReverse(false)
         );
-        this->m_mainLayer->addChild(m_animButtonsMenu);
+        animContainer->addChild(m_animButtonsMenu);
 
-        auto animDescLabel = CCLabelBMFont::create("Test Animations", "goldFont.fnt");
-        animDescLabel->setPosition({lowerMenuX, lowerMenuBaseY + 15.f});
-        animDescLabel->setScale(0.4f);
-        animDescLabel->setID("test-animations-label");
-        this->m_mainLayer->addChild(animDescLabel);
-        
         if (m_currentIconType == IconType::Robot) {
             auto createAnimBtn = [this](const char* label, const char* animName) {
                 auto lbl = CCLabelBMFont::create(label, "bigFont.fnt");
                 lbl->setScale(0.4f);
                 auto btn = CCMenuItemSpriteExtra::create(
-                    CircleButtonSprite::create(lbl, CircleBaseColor::Gray, CircleBaseSize::Small),
+                    EditorButtonSprite::create(lbl, EditorBaseColor::Green, EditorBaseSize::Normal),
                     this,
                     menu_selector(IconOffsetEditorPopup::onPlayAnimation)
                 );
@@ -605,7 +603,7 @@ bool IconOffsetEditorPopup::init() {
                 auto lbl = CCLabelBMFont::create(label, "bigFont.fnt");
                 lbl->setScale(0.4f);
                 auto btn = CCMenuItemSpriteExtra::create(
-                    CircleButtonSprite::create(lbl, CircleBaseColor::Gray, CircleBaseSize::Small),
+                    EditorButtonSprite::create(lbl, EditorBaseColor::Green, EditorBaseSize::Normal),
                     this,
                     menu_selector(IconOffsetEditorPopup::onPlayAnimation)
                 );
@@ -621,6 +619,9 @@ bool IconOffsetEditorPopup::init() {
         }
         
         m_animButtonsMenu->updateLayout();
+        animContainer->updateLayout();
+        animContainer->setPosition({lowerMenuX, lowerMenuBaseY});
+        this->m_mainLayer->addChild(animContainer);
     }
 
     // -----------------------
@@ -641,7 +642,7 @@ bool IconOffsetEditorPopup::init() {
         auto playLbl = CCLabelBMFont::create("Spin", "bigFont.fnt");
         playLbl->setScale(0.35f);
         auto playBtn = CCMenuItemSpriteExtra::create(
-            CircleButtonSprite::create(playLbl, CircleBaseColor::Green, CircleBaseSize::Small),
+            EditorButtonSprite::create(playLbl, EditorBaseColor::Green, EditorBaseSize::Normal),
             this,
             menu_selector(IconOffsetEditorPopup::onPlayBallRotation)
         );
@@ -650,7 +651,7 @@ bool IconOffsetEditorPopup::init() {
         auto stopLbl = CCLabelBMFont::create("Stop", "bigFont.fnt");
         stopLbl->setScale(0.35f);
         auto stopBtn = CCMenuItemSpriteExtra::create(
-            CircleButtonSprite::create(stopLbl, CircleBaseColor::Gray, CircleBaseSize::Small),
+            EditorButtonSprite::create(stopLbl, EditorBaseColor::Green, EditorBaseSize::Normal),
             this,
             menu_selector(IconOffsetEditorPopup::onStopBallRotation)
         );
@@ -661,64 +662,27 @@ bool IconOffsetEditorPopup::init() {
         m_animButtonsMenu->updateLayout();
         
         // rotation speed slider
-        auto speedLabel = CCLabelBMFont::create("Full Spin Duration:", "bigFont.fnt");
-        speedLabel->setPosition({lowerMenuX - 15.f, lowerMenuBaseY + 15.f});
-        speedLabel->setScale(0.3f);
-        speedLabel->setID("spin-label");
-        this->m_mainLayer->addChild(speedLabel);
-        
-        m_rotationSpeedSlider = Slider::create(
-            this, 
-            menu_selector(IconOffsetEditorPopup::onRotationSpeedChanged), 
-            0.6f
+        auto spinDuration = UIUtils::labeledSlider(
+            "Full Spin Duration:",
+            0.5f,
+            "1.0",
+            this,
+            menu_selector(IconOffsetEditorPopup::onRotationSpeedChanged),
+            0.6f,
+            "spin-duration"
         );
-        m_rotationSpeedSlider->setValue(0.5f);
-        m_rotationSpeedSlider->m_sliderBar->setContentSize({80.f, m_rotationSpeedSlider->m_sliderBar->getContentSize().height});
-        
-        auto sliderMenu = CCMenu::create();
-        sliderMenu->addChild(m_rotationSpeedSlider);
-        sliderMenu->setPosition({lowerMenuX, lowerMenuBaseY});
-        sliderMenu->setID("slider-menu");
-        this->m_mainLayer->addChild(sliderMenu);
-        
-        m_rotationSpeedLabel = CCLabelBMFont::create("1.0", "bigFont.fnt");
-        m_rotationSpeedLabel->setPosition({lowerMenuX + 50.f, lowerMenuBaseY + 15.f});
-        m_rotationSpeedLabel->setScale(0.3f);
-        m_rotationSpeedLabel->setID("rotation-speed-label");
-        this->m_mainLayer->addChild(m_rotationSpeedLabel);
+        m_rotationSpeedSlider = spinDuration.slider;
+        m_rotationSpeedLabel = spinDuration.valueLabel;
+        spinDuration.container->setPosition({lowerMenuX, lowerMenuBaseY});
+        this->m_mainLayer->addChild(spinDuration.container);
     }
-
-    // -----------------------
-    // COLOR PICKER ROWS
-    // -----------------------
-    m_previewColor1 = manager->colorForIdx(manager->getPlayerColor());
-    m_previewColor2 = manager->colorForIdx(manager->getPlayerColor2());
-    m_previewGlowColor = manager->colorForIdx(manager->getPlayerGlowColor());
-
-    auto colorColumn = UIUtils::column(2.5f, AxisAlignment::Center, AxisAlignment::Start, false, "color-picker-column");
-    colorColumn->setPosition({midX - 170.f, midY});
-
-    auto color1Row = UIUtils::colorPickerRow("Col 1", m_previewColor1, this, menu_selector(IconOffsetEditorPopup::onColorPicker), 90.f, 0.35f, "color1-row");
-    color1Row.button->setUserObject("color-id"_spr, CCString::create("color1"));
-    colorColumn->addChild(color1Row.container);
-
-    auto color2Row = UIUtils::colorPickerRow("Col 2", m_previewColor2, this, menu_selector(IconOffsetEditorPopup::onColorPicker), 90.f, 0.35f, "color2-row");
-    color2Row.button->setUserObject("color-id"_spr, CCString::create("color2"));
-    colorColumn->addChild(color2Row.container);
-
-    auto glowColorRow = UIUtils::colorPickerRow("Glow", m_previewGlowColor, this, menu_selector(IconOffsetEditorPopup::onColorPicker), 90.f, 0.35f, "glow-color-row");
-    glowColorRow.button->setUserObject("color-id"_spr, CCString::create("glow"));
-    colorColumn->addChild(glowColorRow.container);
-
-    colorColumn->updateLayout();
-    this->m_mainLayer->addChild(colorColumn);
 
     // -----------------------
     // OFFSET CONTROLS
     // -----------------------
     auto offsetsColumn = UIUtils::column(10.f, AxisAlignment::Center, AxisAlignment::Start, false, "offsets-column");
     offsetsColumn->setAnchorPoint({0.f, 1.f});
-    offsetsColumn->setPosition({25.f, size.height - 15.f});
+    offsetsColumn->setPosition({15.f, size.height - 20.f});
 
     auto offsetXRow = UIUtils::offsetRow(
         "Offset X:", this,
@@ -795,9 +759,11 @@ bool IconOffsetEditorPopup::init() {
         }
     }
 
-    m_partScrollLayer = ScrollLayer::create({IconPartCell::WIDTH, 200.f});
+    m_partScrollLayer = ScrollLayer::create({IconPartCell::WIDTH, 240.f});
     m_partScrollLayer->setID("part-select-scroll-layer");
-    m_partScrollLayer->setPosition({size.width - IconPartCell::WIDTH - 15.f, midY});
+    m_partScrollLayer->ignoreAnchorPointForPosition(false);
+    m_partScrollLayer->setAnchorPoint({1.f, 0.5f});
+    m_partScrollLayer->setPosition({size.width - 15.f, midY});
     this->m_mainLayer->addChild(m_partScrollLayer);
 
     setupPartScrollLayer();
@@ -805,7 +771,18 @@ bool IconOffsetEditorPopup::init() {
     auto scrollFrame = NineSlice::create("scrollFrame.png"_spr);
     scrollFrame->setID("scroll-frame");
     scrollFrame->setContentSize({m_partScrollLayer->getContentSize().width + 10.f, m_partScrollLayer->getContentSize().height + 10.f});
+    scrollFrame->setAnchorPoint({1.f, 0.5f});
+    scrollFrame->setPosition({m_partScrollLayer->getPositionX() + 5.f, m_partScrollLayer->getPositionY()});
     this->m_mainLayer->addChild(scrollFrame, 2);
+
+    auto scrollFrameUnderlay = NineSlice::create("fullAreaSquare.png"_spr);
+    scrollFrameUnderlay->setID("scroll-frame-underlay");
+    scrollFrameUnderlay->setColor({0, 0, 0});
+    scrollFrameUnderlay->setOpacity(40);
+    scrollFrameUnderlay->setContentSize({m_partScrollLayer->getContentSize().width + 2.f, m_partScrollLayer->getContentSize().height + 2.f});
+    scrollFrameUnderlay->setAnchorPoint({1.f, 0.5f});
+    scrollFrameUnderlay->setPosition({m_partScrollLayer->getPositionX() + 1.f, m_partScrollLayer->getPositionY()});
+    this->m_mainLayer->addChild(scrollFrameUnderlay, 0);
 
     updateInputFields();
     highlightSelectedButton();

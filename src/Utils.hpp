@@ -147,11 +147,12 @@ namespace UIUtils {
         auto offSpr = CCSprite::createWithSpriteFrameName("GJ_checkOff_001.png");
         auto onSpr = CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png");
         auto toggler = CCMenuItemToggler::create(offSpr, onSpr, target, selector);
-        toggler->toggle(initialState);
         toggler->setScale(togglerScale);
         menu->addChild(toggler);
-
         menu->updateLayout();
+
+        toggler->toggle(initialState);
+        
         if (id) menu->setID(id);
 
         return {menu, toggler};
@@ -273,6 +274,67 @@ namespace UIUtils {
         }
 
         return {outer, input, nudgeDownBtn, nudgeUpBtn, addBtn};
+    }
+
+    // i fucking hate sliders
+    inline CCMenu* fixSlider(Slider* slider, const char* menuId = nullptr) {
+        auto grooveSize = slider->m_groove->getContentSize();
+
+        slider->setContentSize(grooveSize);
+        slider->setAnchorPoint({0.5f, 0.5f});
+        slider->setLayout(AnchorLayout::create());
+        slider->m_groove->setLayoutOptions(AnchorLayoutOptions::create()->setAnchor(Anchor::Center));
+        slider->m_touchLogic->setLayoutOptions(AnchorLayoutOptions::create()->setAnchor(Anchor::Center));
+        slider->updateLayout();
+
+        auto menu = CCMenu::create();
+        menu->setContentSize(slider->getScaledContentSize());
+        menu->setAnchorPoint({0.5f, 0.5f});
+        menu->setLayout(AnchorLayout::create());
+
+        slider->setLayoutOptions(AnchorLayoutOptions::create()->setAnchor(Anchor::Center));
+        menu->addChild(slider);
+        menu->updateLayout();
+
+        if (menuId) menu->setID(menuId);
+        return menu;
+    }
+
+    struct LabeledSlider {
+        CCNode* container;
+        Slider* slider;
+        CCLabelBMFont* valueLabel;
+    };
+
+    inline LabeledSlider labeledSlider(const std::string& labelText, float initialValue, const std::string& initialValueText, CCNode* target, SEL_MenuHandler selector, float sliderScale = 0.6f, const char* idPrefix = nullptr) {
+        auto container = column(2.f, AxisAlignment::Center, AxisAlignment::Center, false);
+
+        auto label = CCLabelBMFont::create(labelText.c_str(), "goldFont.fnt");
+        label->setScale(0.35f);
+        container->addChild(label);
+
+        auto slider = Slider::create(target, selector, sliderScale);
+        slider->setValue(initialValue);
+
+        std::string menuId;
+        if (idPrefix) menuId = fmt::format("{}-menu", idPrefix);
+        auto sliderMenu = fixSlider(slider, idPrefix ? menuId.c_str() : nullptr);
+        container->addChild(sliderMenu);
+
+        auto valueLabel = CCLabelBMFont::create(initialValueText.c_str(), "bigFont.fnt");
+        valueLabel->setScale(0.25f);
+        valueLabel->setOpacity(150);
+        container->addChild(valueLabel);
+
+        container->updateLayout();
+
+        if (idPrefix) {
+            container->setID(fmt::format("{}-container", idPrefix));
+            label->setID(fmt::format("{}-label-text", idPrefix));
+            valueLabel->setID(fmt::format("{}-value-label", idPrefix));
+        }
+
+        return {container, slider, valueLabel};
     }
 
 }

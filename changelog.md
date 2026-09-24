@@ -1,3 +1,15 @@
+# v1.5.0
+- **COMPLETELY REDESIGNED** the Popup UI!
+    - Popup is now bigger.
+    - Turned the Icon Parts List into a ScrollLayer.
+    - Element Preview Toggles (Hitbox/Glow) are now proper Togglers.
+    - Colour picker buttons are no longer outside of the main popup area.
+    - Update/Apply buttons are no longer outside of the main popup area.
+    - Icon itself is now 3x scale instead of 2x.
+    - Added a light underlay for the Icon area.
+- Added buttons for offset control to make it easier to adjust them on Mobile devices.
+- Added Trail Preview (Ship/Wave).
+
 # v1.4.2
 - HOPEFULLY *ACTUALLY* fixed plist editing being broken sometimes.
 

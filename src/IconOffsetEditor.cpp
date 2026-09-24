@@ -462,6 +462,36 @@ bool IconOffsetEditorPopup::init() {
     }
 
     // -----------------------
+    // TRAIL PREVIEW
+    // -----------------------
+    if (m_currentIconType != IconType::Ufo && m_currentIconType != IconType::Robot && m_currentIconType != IconType::Spider && m_currentIconType != IconType::Jetpack) {
+        std::string trailPreviewTexture = fmt::format("trailPreviewImage_{}.png"_spr, Mod::get()->getSettingValue<bool>("trail-outer-border") ? "borders" : "no-borders");
+        auto m_trailPreview = CCSprite::create(trailPreviewTexture.c_str());
+        m_trailPreview->setID("trail-preview");
+        m_trailPreview->setAnchorPoint({1.f, 0.5f});
+        m_trailPreview->setOpacity(200);
+        m_iconContainerNode->addChild(m_trailPreview, -3);
+
+        // ship trail
+        if (m_currentIconType == IconType::Ship) {            
+            m_trailPreview->setPosition({midContainerX - 9.1f, m_previewPlayer->getPositionY() - 4.f});
+            m_trailPreview->setScaleX(1.625f);         
+        }
+
+        // basic gamemodes
+        if (m_currentIconType == IconType::Cube || m_currentIconType == IconType::Ball) {
+            m_trailPreview->setPosition(m_previewPlayer->getPosition());
+            m_trailPreview->setScaleX(2.225f);
+        }
+
+        // swing trail
+        if (m_currentIconType == IconType::Swing) {
+            m_trailPreview->setPosition({m_previewPlayer->getPositionX() - 12.5f, m_previewPlayer->getPositionY()});
+            m_trailPreview->setScaleX(1.385f);
+        }
+    }
+
+    // -----------------------
     // COLOR PICKER ROWS
     // -----------------------
     m_previewColor1 = manager->colorForIdx(manager->getPlayerColor());
@@ -502,7 +532,7 @@ bool IconOffsetEditorPopup::init() {
     m_hitboxToggler = hitboxRow.toggler;
     togglersColumn->addChild(hitboxRow.container);
 
-    auto trailRow = UIUtils::togglerRow("Trail", false, this, menu_selector(IconOffsetEditorPopup::onToggleTrail), 70.f, 0.35f, 0.6f, "trail-toggler-row");
+    auto trailRow = UIUtils::togglerRow("Trail", true, this, menu_selector(IconOffsetEditorPopup::onToggleTrail), 70.f, 0.35f, 0.6f, "trail-toggler-row");
     m_trailToggler = trailRow.toggler;
     togglersColumn->addChild(trailRow.container);
 
@@ -778,7 +808,7 @@ bool IconOffsetEditorPopup::init() {
     auto scrollFrameUnderlay = NineSlice::create("fullAreaSquare.png"_spr);
     scrollFrameUnderlay->setID("scroll-frame-underlay");
     scrollFrameUnderlay->setColor({0, 0, 0});
-    scrollFrameUnderlay->setOpacity(40);
+    scrollFrameUnderlay->setOpacity(30);
     scrollFrameUnderlay->setContentSize({m_partScrollLayer->getContentSize().width + 2.f, m_partScrollLayer->getContentSize().height + 2.f});
     scrollFrameUnderlay->setAnchorPoint({1.f, 0.5f});
     scrollFrameUnderlay->setPosition({m_partScrollLayer->getPositionX() + 1.f, m_partScrollLayer->getPositionY()});
@@ -1023,6 +1053,14 @@ void IconOffsetEditorPopup::onToggleGlow(CCObject* sender) {
         }
     } else {
         if (m_previewPlayer->m_outlineSprite) m_previewPlayer->m_outlineSprite->setVisible(!m_previewPlayer->m_outlineSprite->isVisible());
+    }
+}
+
+void IconOffsetEditorPopup::onToggleTrail(CCObject* sender) {
+    if (m_currentIconType == IconType::Cube || m_currentIconType == IconType::Ball || m_currentIconType == IconType::Ship || m_currentIconType == IconType::Swing || m_currentIconType == IconType::Wave) {
+        if (m_trailPreview) {
+            m_trailPreview->setVisible(!m_trailPreview->isVisible());
+        }
     }
 }
 
@@ -1908,10 +1946,6 @@ void IconOffsetEditorPopup::onNudgeOffsetXDown(CCObject* sender) { nudgeOffset(m
 void IconOffsetEditorPopup::onNudgeOffsetXUp(CCObject* sender)   { nudgeOffset(m_inputX, 1.f); }
 void IconOffsetEditorPopup::onNudgeOffsetYDown(CCObject* sender) { nudgeOffset(m_inputY, -1.f); }
 void IconOffsetEditorPopup::onNudgeOffsetYUp(CCObject* sender)   { nudgeOffset(m_inputY, 1.f); }
-
-void IconOffsetEditorPopup::onToggleTrail(CCObject* sender) {
-    log::info("when te togglean la trail: me togglearon. ....  . .");
-}
 
 void IconOffsetEditorPopup::onHitboxOpacityChanged(CCObject* sender) {
     m_hitboxOpacity = m_hitboxOpacitySlider->getValue();

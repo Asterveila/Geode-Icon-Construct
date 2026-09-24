@@ -33,6 +33,10 @@ protected:
     PlayerFireBoostSprite* m_swingMidFire = nullptr;
     PlayerFireBoostSprite* m_swingBotFire = nullptr;
 
+    CCSprite* m_trailPreview = nullptr;
+    NineSlice* m_waveTrailPreview = nullptr;
+    NineSlice* m_waveTrailPreviewLighter = nullptr;
+
     geode::TextInput* m_inputX = nullptr;
     geode::TextInput* m_inputY = nullptr;
     CCLabelBMFont* m_labelX = nullptr;

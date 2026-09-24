@@ -42,6 +42,12 @@
 			"description": "Plays the in-game looping Fire Animation on the preview's Swing Fires",
 			"default": true
 		},
+		"trail-outer-border": {
+			"type": "bool",
+			"name": "Show Trail Outer Edges",
+			"description": "For Basic Trail Previewing (non-wave). If enabled, uses a texture that adds 2 lines to mark the outer edges of the trail's boundary. These lines loosely indicate the size of bigger trails, such as the Spike trail or the Fire trail.",
+			"default": true
+		},
 		"draw-hitbox-fill": {
 			"type": "bool",
 			"name": "Draw Hitbox Fill",

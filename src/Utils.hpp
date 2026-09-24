@@ -168,7 +168,7 @@ namespace UIUtils {
         menu->setContentSize({width, 20.f});
         menu->setLayout(
             RowLayout::create()
-                ->setGap(1.f)
+                ->setGap(4.f)
                 ->setAxisAlignment(AxisAlignment::Start)
                 ->setCrossAxisAlignment(AxisAlignment::Center)
                 ->setAutoScale(false)

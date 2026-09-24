@@ -695,18 +695,18 @@ bool IconOffsetEditorPopup::init() {
     m_previewColor2 = manager->colorForIdx(manager->getPlayerColor2());
     m_previewGlowColor = manager->colorForIdx(manager->getPlayerGlowColor());
 
-    auto colorColumn = UIUtils::column(4.f, AxisAlignment::Center, AxisAlignment::Start, false, "color-picker-column");
+    auto colorColumn = UIUtils::column(2.5f, AxisAlignment::Center, AxisAlignment::Start, false, "color-picker-column");
     colorColumn->setPosition({midX - 170.f, midY});
 
-    auto color1Row = UIUtils::colorPickerRow("Col 1", m_previewColor1, this, menu_selector(IconOffsetEditorPopup::onColorPicker), 90.f, 0.4f, "color1-row");
+    auto color1Row = UIUtils::colorPickerRow("Col 1", m_previewColor1, this, menu_selector(IconOffsetEditorPopup::onColorPicker), 90.f, 0.35f, "color1-row");
     color1Row.button->setUserObject("color-id"_spr, CCString::create("color1"));
     colorColumn->addChild(color1Row.container);
 
-    auto color2Row = UIUtils::colorPickerRow("Col 2", m_previewColor2, this, menu_selector(IconOffsetEditorPopup::onColorPicker), 90.f, 0.4f, "color2-row");
+    auto color2Row = UIUtils::colorPickerRow("Col 2", m_previewColor2, this, menu_selector(IconOffsetEditorPopup::onColorPicker), 90.f, 0.35f, "color2-row");
     color2Row.button->setUserObject("color-id"_spr, CCString::create("color2"));
     colorColumn->addChild(color2Row.container);
 
-    auto glowColorRow = UIUtils::colorPickerRow("Glow", m_previewGlowColor, this, menu_selector(IconOffsetEditorPopup::onColorPicker), 90.f, 0.4f, "glow-color-row");
+    auto glowColorRow = UIUtils::colorPickerRow("Glow", m_previewGlowColor, this, menu_selector(IconOffsetEditorPopup::onColorPicker), 90.f, 0.35f, "glow-color-row");
     glowColorRow.button->setUserObject("color-id"_spr, CCString::create("glow"));
     colorColumn->addChild(glowColorRow.container);
 
@@ -795,12 +795,17 @@ bool IconOffsetEditorPopup::init() {
         }
     }
 
-    m_partScrollLayer = ScrollLayer::create({IconPartCell::WIDTH, 250.f});
+    m_partScrollLayer = ScrollLayer::create({IconPartCell::WIDTH, 200.f});
     m_partScrollLayer->setID("part-select-scroll-layer");
-    m_partScrollLayer->setPosition({size.width - IconPartCell::WIDTH - 15.f, midY - 110.f});
+    m_partScrollLayer->setPosition({size.width - IconPartCell::WIDTH - 15.f, midY});
     this->m_mainLayer->addChild(m_partScrollLayer);
 
     setupPartScrollLayer();
+
+    auto scrollFrame = NineSlice::create("scrollFrame.png"_spr);
+    scrollFrame->setID("scroll-frame");
+    scrollFrame->setContentSize({m_partScrollLayer->getContentSize().width + 10.f, m_partScrollLayer->getContentSize().height + 10.f});
+    this->m_mainLayer->addChild(scrollFrame, 2);
 
     updateInputFields();
     highlightSelectedButton();

@@ -71,11 +71,17 @@
 			"name": "Draw Hitbox Fill",
 			"description": "Enables drawing the hitbox fill in the Workbench Hitbox preview. \n\nIn case you're wondering why you can toggle this and not the border, it's because the border is mainly controlled via the slider in the popup.",
 			"default": true
+		},
+		"raw-part-names": {
+			"type": "bool",
+			"name": "Show Raw Part Names",
+			"description": "For Robot/Spider icons. Displays the raw part frame names in the popup's right-side Scrollable List, instead of using simplified names. This is a setting in case the automatic detection and simplification of frame names fails.",
+			"default": false
 		}
 	},
 	"id": "saritahhh.offset_assist",
 	"name": "Icon Construct",
-	"version": "v1.5.0",
+	"version": "v1.5.1",
 	"developer": "Saritahhh",
 	"description": "All-in-one Utils for Icon Creators!",
 	"tags": ["interface", "utility"],

@@ -112,6 +112,50 @@ std::string getRealFrameName(const std::string& fullFrameName) {
     return result;
 }
 
+std::string getReadableName(const std::string& frameName, IconType type) {
+    std::string fn = getRealFrameName(frameName);
+
+    std::string lower = fn;
+    std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return std::tolower(c); });
+
+    // @geode-ignore(unknown-resource)
+    if (!lower.ends_with("_001.png")) return fn;
+
+    bool isComplex = (type == IconType::Robot || type == IconType::Spider);
+
+    if (!isComplex) {
+        if (lower.find("_glow") != std::string::npos) return "Glow";
+        if (lower.find("_extra") != std::string::npos) return "Extra";
+        // @geode-ignore(unknown-resource)
+        if (lower.ends_with("_3_001.png")) return "Dome";
+        // @geode-ignore(unknown-resource)
+        if (lower.ends_with("_2_001.png") || lower.find("_secondary") != std::string::npos) return "Secondary";
+        return "Primary";
+    }
+
+    static const std::array<std::pair<const char*, const char*>, 4> robotRegions = {{
+        {"01", "Head"}, {"02", "Leg"}, {"03", "Connector"}, {"04", "Foot"}
+    }};
+    static const std::array<std::pair<const char*, const char*>, 4> spiderRegions = {{
+        {"01", "Head"}, {"02", "Front Leg"}, {"03", "Back Leg"}, {"04", "Connector"}
+    }};
+
+    const auto& regions = (type == IconType::Robot) ? robotRegions : spiderRegions;
+    for (const auto& [code, regionName] : regions) {
+        std::string prefix = std::string("_") + code;
+        // @geode-ignore(unknown-resource)
+        if (lower.ends_with(prefix + "_glow_001.png")) return std::string(regionName) + " Glow";
+        // @geode-ignore(unknown-resource)
+        if (lower.ends_with(prefix + "_extra_001.png")) return std::string(regionName) + " Extra";
+        // @geode-ignore(unknown-resource)
+        if (lower.ends_with(prefix + "_2_001.png")) return std::string(regionName) + " Secondary";
+        // @geode-ignore(unknown-resource)
+        if (lower.ends_with(prefix + "_001.png")) return std::string(regionName) + " Primary";
+    }
+
+    return fn;
+}
+
 std::string getPreservedSuffix(const std::string& frameName, IconType type) {
     // @geode-ignore(unknown-resource)
     if (!frameName.ends_with("_001.png")) return "";
@@ -873,6 +917,8 @@ bool IconOffsetEditorPopup::init() {
 
 void IconOffsetEditorPopup::setupPartScrollLayer() {
     bool isRobotOrSpider = (m_currentIconType == IconType::Robot || m_currentIconType == IconType::Spider);
+    bool useRawNames = Mod::get()->getSettingValue<bool>("raw-part-names");
+    const char* fontFile = useRawNames ? "chatFont.fnt" : "bigFont.fnt";
 
     std::vector<IconPartCell*> cells;
 
@@ -885,14 +931,17 @@ void IconOffsetEditorPopup::setupPartScrollLayer() {
                 continue;
             }
 
+            std::string displayName = useRawNames ? getRealFrameName(frameName) : getReadableName(frameName, m_currentIconType);
+
             auto cell = IconPartCell::create(
                 frame,
-                getRealFrameName(frameName),
+                displayName,
                 frameName,
                 i,
                 cells.size() % 2 == 0,
                 this,
-                menu_selector(IconOffsetEditorPopup::onPartSelected)
+                menu_selector(IconOffsetEditorPopup::onPartSelected),
+                fontFile
             );
 
             m_frameCells[frameName] = cell;
@@ -909,7 +958,8 @@ void IconOffsetEditorPopup::setupPartScrollLayer() {
                 static_cast<int>(part),
                 cells.size() % 2 == 0,
                 this,
-                menu_selector(IconOffsetEditorPopup::onPartSelected)
+                menu_selector(IconOffsetEditorPopup::onPartSelected),
+                fontFile
             );
 
             m_partCells[part] = cell;

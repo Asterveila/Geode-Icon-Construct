@@ -1,3 +1,9 @@
+# v1.5.1
+- Internal code cleanup when creating the button to access the mod's popup via the Icon Garage.
+- Fixed an issue where the normal trail would still be shown (and be out of place) when a wave icon is selected.
+- Tweak the Popup's ScrollLayer entries to use more readable names for Robot/Spider icons instead of the full, raw frame names.
+- Added a setting to skip the simplified part names for Robot/Spider icons in case the just mentioned system fails.
+
 # v1.5.0
 - **COMPLETELY REDESIGNED** the Popup UI!
     - Popup is now bigger.

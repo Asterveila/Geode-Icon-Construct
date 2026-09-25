@@ -1,6 +1,6 @@
 #include "IconPartCell.hpp"
 
-bool IconPartCell::init(CCSpriteFrame* frame, const std::string& displayName, const std::string& partId, int tag, bool even, CCObject* target, SEL_MenuHandler selector) {
+bool IconPartCell::init(CCSpriteFrame* frame, const std::string& displayName, const std::string& partId, int tag, bool even, CCObject* target, SEL_MenuHandler selector, const std::string& fontFile) {
     if (!CCLayer::init()) return false;
 
     CCSize size = {WIDTH, HEIGHT};
@@ -32,20 +32,20 @@ bool IconPartCell::init(CCSpriteFrame* frame, const std::string& displayName, co
     m_button->setID(fmt::format("{}-btn", partId));
     menu->addChild(m_button);
 
-    auto nameLabel = CCLabelBMFont::create(displayName.c_str(), "chatFont.fnt");
+    auto nameLabel = CCLabelBMFont::create(displayName.c_str(), fontFile.c_str());
     nameLabel->setAnchorPoint({0.f, 0.5f});
     nameLabel->setPosition({44.f, size.height / 2.f});
-    nameLabel->setScale(0.6f);
-    nameLabel->setOpacity(190);
-    nameLabel->limitLabelWidth(WIDTH - 48.f, 0.6f, 0.1f);
+    nameLabel->setScale(0.5f);
+    // nameLabel->setOpacity(190);
+    nameLabel->limitLabelWidth(WIDTH - 48.f, 0.5f, 0.1f);
     this->addChild(nameLabel);
 
     return true;
 }
 
-IconPartCell* IconPartCell::create(CCSpriteFrame* frame, const std::string& displayName, const std::string& partId, int tag, bool even, CCObject* target, SEL_MenuHandler selector) {
+IconPartCell* IconPartCell::create(CCSpriteFrame* frame, const std::string& displayName, const std::string& partId, int tag, bool even, CCObject* target, SEL_MenuHandler selector, const std::string& fontFile) {
     auto ret = new IconPartCell();
-    if (ret->init(frame, displayName, partId, tag, even, target, selector)) {
+    if (ret->init(frame, displayName, partId, tag, even, target, selector, fontFile)) {
         ret->autorelease();
         return ret;
     }

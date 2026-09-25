@@ -518,7 +518,8 @@ bool IconOffsetEditorPopup::init() {
 
         // wave trail
         if (m_currentIconType == IconType::Wave) {
-            m_trailPreview->setVisible(false);
+            m_trailPreview->removeFromParent();
+            m_trailPreview = nullptr;
 
             float waveTrailBaseH = 12.2f;
 

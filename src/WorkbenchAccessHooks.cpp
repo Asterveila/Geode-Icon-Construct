@@ -7,7 +7,6 @@ class $modify(OffsetEditorGarageLayer, GJGarageLayer) {
     bool init() {
         if (!GJGarageLayer::init()) return false;
         
-        //auto editorSprite = CCSprite::createWithSpriteFrameName("GJ_editBtn_001.png");
 		auto editorSprite = CircleButtonSprite::create(CCSprite::create("offsetIndicatorBtn.png"_spr), CircleBaseColor::Green, CircleBaseSize::SmallAlt);
         auto editorButton = CCMenuItemSpriteExtra::create(
             editorSprite,
@@ -16,16 +15,12 @@ class $modify(OffsetEditorGarageLayer, GJGarageLayer) {
         );
         
         auto menu = this->getChildByID("shards-menu");
-        if (!menu) {
-            menu = CCMenu::create();
-            menu->setID("offset-editor-menu"_spr);
-            menu->setPosition({20.0f, 100.0f});
-            this->addChild(menu);
+        if (menu) {
+            editorButton->setID("icon-workbench"_spr);
+            editorButton->setPosition({-180.0f, 120.0f});
+            menu->addChild(editorButton);
+            menu->updateLayout();
         }
-        
-        editorButton->setID("icon-workbench"_spr);
-        editorButton->setPosition({-180.0f, 120.0f});
-        menu->addChild(editorButton);
         
         return true;
     }

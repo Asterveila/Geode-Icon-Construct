@@ -8,7 +8,10 @@
     - Icon itself is now 3x scale instead of 2x.
     - Added a light underlay for the Icon area.
 - Added buttons for offset control to make it easier to adjust them on Mobile devices.
-- Added Trail Preview (Ship/Wave).
+- Added Trail Preview! (Basic Trail and Wave Trail).
+    - Has a setting to enable/disable tinting the Trail/Wave Trail preview.
+    - Has a setting to enable/disable Trail Preview Blending.
+    - Has a setting to enable viewing the outer edges of Normal Trails (to show the area covered by bigger trails, such as the Fire one).
 
 # v1.4.2
 - HOPEFULLY *ACTUALLY* fixed plist editing being broken sometimes.

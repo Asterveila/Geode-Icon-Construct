@@ -761,7 +761,7 @@ bool IconOffsetEditorPopup::init() {
     // -----------------------
     if (m_currentIconType == IconType::Ball) {
         m_animButtonsMenu = CCMenu::create();
-        m_animButtonsMenu->setPosition({lowerMenuX, lowerMenuBaseY - 25.f});
+        m_animButtonsMenu->setPosition({lowerMenuX, lowerMenuBaseY - 30.f});
         m_animButtonsMenu->setContentSize({55.f, 40.f});
         m_animButtonsMenu->setLayout(
             RowLayout::create()

@@ -36,6 +36,7 @@ protected:
     CCSprite* m_trailPreview = nullptr;
     NineSlice* m_waveTrailPreview = nullptr;
     NineSlice* m_waveTrailPreviewLighter = nullptr;
+    bool m_showTrail = true;
 
     geode::TextInput* m_inputX = nullptr;
     geode::TextInput* m_inputY = nullptr;

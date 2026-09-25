@@ -76,6 +76,25 @@ CCSize getHitboxSizeForIconType(IconType iconType) {
     }
 }
 
+bool isValidTrailMode(IconType type) {
+    bool ret;
+
+    switch(type) {
+        case IconType::Cube:
+        case IconType::Ship:
+        case IconType::Ball:
+        case IconType::Wave:
+        case IconType::Swing:
+            ret = true;
+            break;
+        default:
+            ret = false;
+            break;
+    }
+
+    return ret;
+}
+
 std::string getCurrentTimeString() {
     auto now = std::chrono::system_clock::now();
     return fmt::format("{:%Y%m%d_%H%M%S}", now);
@@ -261,6 +280,10 @@ bool IconOffsetEditorPopup::init() {
     const float inputYTop = midY + 25.0f;
     const float lowerMenuX = 78.5;
     const float lowerMenuBaseY = midY - 70.5f;
+
+    m_previewColor1 = manager->colorForIdx(manager->getPlayerColor());
+    m_previewColor2 = manager->colorForIdx(manager->getPlayerColor2());
+    m_previewGlowColor = manager->colorForIdx(manager->getPlayerGlowColor());
 
     // -----------------------
     // DISABLE FOR VANILLA ICONS (L bozo sorry it's easier to work with MI) <- i am no longer sorry fuck you
@@ -464,13 +487,16 @@ bool IconOffsetEditorPopup::init() {
     // -----------------------
     // TRAIL PREVIEW
     // -----------------------
-    if (m_currentIconType != IconType::Ufo && m_currentIconType != IconType::Robot && m_currentIconType != IconType::Spider && m_currentIconType != IconType::Jetpack) {
+    if (isValidTrailMode(m_currentIconType)) {
         std::string trailPreviewTexture = fmt::format("trailPreviewImage_{}.png"_spr, Mod::get()->getSettingValue<bool>("trail-outer-border") ? "borders" : "no-borders");
-        auto m_trailPreview = CCSprite::create(trailPreviewTexture.c_str());
+        m_trailPreview = CCSprite::create(trailPreviewTexture.c_str());
         m_trailPreview->setID("trail-preview");
         m_trailPreview->setAnchorPoint({1.f, 0.5f});
-        m_trailPreview->setOpacity(200);
+        // m_trailPreview->setOpacity(200);
         m_iconContainerNode->addChild(m_trailPreview, -3);
+
+        if (Mod::get()->getSettingValue<bool>("color-trail")) m_trailPreview->setColor(m_previewColor2);
+        if (Mod::get()->getSettingValue<bool>("trail-blending")) m_trailPreview->setBlendFunc({GL_SRC_ALPHA, GL_ONE});
 
         // ship trail
         if (m_currentIconType == IconType::Ship) {            
@@ -489,15 +515,38 @@ bool IconOffsetEditorPopup::init() {
             m_trailPreview->setPosition({m_previewPlayer->getPositionX() - 12.5f, m_previewPlayer->getPositionY()});
             m_trailPreview->setScaleX(1.385f);
         }
+
+        // wave trail
+        if (m_currentIconType == IconType::Wave) {
+            m_trailPreview->setVisible(false);
+
+            float waveTrailBaseH = 12.2f;
+
+            // main trail
+            m_waveTrailPreview = NineSlice::create("fullAreaSquare.png"_spr);
+            m_waveTrailPreview->setID("wave-trail-preview");
+            m_waveTrailPreview->setAnchorPoint({1.f, 0.5f});
+            m_waveTrailPreview->setContentSize({33.3f, waveTrailBaseH});
+            m_waveTrailPreview->setPosition({midContainerX, midContainerY});
+
+            if (Mod::get()->getSettingValue<bool>("color-wave-trail")) m_waveTrailPreview->setColor(m_previewColor1);
+
+            m_iconContainerNode->addChild(m_waveTrailPreview, -4);
+
+            // highlight
+            m_waveTrailPreviewLighter = NineSlice::create("fullAreaSquare.png"_spr);
+            m_waveTrailPreviewLighter->setID("wave-trail-preview-lighter");
+            m_waveTrailPreviewLighter->setAnchorPoint({1.f, 0.5f});
+            m_waveTrailPreviewLighter->setContentSize({33.3f, waveTrailBaseH / 2.f});
+            m_waveTrailPreviewLighter->setPosition({midContainerX, midContainerY});
+            m_waveTrailPreviewLighter->setOpacity(100);
+            m_iconContainerNode->addChild(m_waveTrailPreviewLighter, -3);
+        }
     }
 
     // -----------------------
     // COLOR PICKER ROWS
     // -----------------------
-    m_previewColor1 = manager->colorForIdx(manager->getPlayerColor());
-    m_previewColor2 = manager->colorForIdx(manager->getPlayerColor2());
-    m_previewGlowColor = manager->colorForIdx(manager->getPlayerGlowColor());
-
     auto colorColumn = UIUtils::column(2.5f, AxisAlignment::Even, AxisAlignment::Start, false, "color-picker-column");
     colorColumn->setAnchorPoint({0.f, 0.5f});
     colorColumn->setPosition({15.f, midY - 15.f});
@@ -532,8 +581,9 @@ bool IconOffsetEditorPopup::init() {
     m_hitboxToggler = hitboxRow.toggler;
     togglersColumn->addChild(hitboxRow.container);
 
-    auto trailRow = UIUtils::togglerRow("Trail", true, this, menu_selector(IconOffsetEditorPopup::onToggleTrail), 70.f, 0.35f, 0.6f, "trail-toggler-row");
+    auto trailRow = UIUtils::togglerRow("Trail", m_showTrail, this, menu_selector(IconOffsetEditorPopup::onToggleTrail), 70.f, 0.35f, 0.6f, "trail-toggler-row");
     m_trailToggler = trailRow.toggler;
+    trailRow.container->setVisible(isValidTrailMode(m_currentIconType));
     togglersColumn->addChild(trailRow.container);
 
     togglersColumn->updateLayout();
@@ -1057,10 +1107,12 @@ void IconOffsetEditorPopup::onToggleGlow(CCObject* sender) {
 }
 
 void IconOffsetEditorPopup::onToggleTrail(CCObject* sender) {
-    if (m_currentIconType == IconType::Cube || m_currentIconType == IconType::Ball || m_currentIconType == IconType::Ship || m_currentIconType == IconType::Swing || m_currentIconType == IconType::Wave) {
-        if (m_trailPreview) {
-            m_trailPreview->setVisible(!m_trailPreview->isVisible());
-        }
+    m_showTrail = !m_showTrail;
+
+    if (isValidTrailMode(m_currentIconType)) {
+        if (m_trailPreview) m_trailPreview->setVisible(m_showTrail);
+        if (m_waveTrailPreview) m_waveTrailPreview->setVisible(m_showTrail);
+        if (m_waveTrailPreviewLighter) m_waveTrailPreviewLighter->setVisible(m_showTrail);
     }
 }
 
@@ -1242,6 +1294,9 @@ void IconOffsetEditorPopup::applyPreviewColors() {
         m_previewPlayer->setSecondColor(m_previewColor2);
         m_previewPlayer->setGlowOutline(m_previewGlowColor);
         m_previewPlayer->enableCustomGlowColor(m_previewGlowColor);
+
+        if (m_trailPreview && Mod::get()->getSettingValue<bool>("color-trail")) m_trailPreview->setColor(m_previewColor2);
+        if (Mod::get()->getSettingValue<bool>("color-wave-trail")) if (m_waveTrailPreview) m_waveTrailPreview->setColor(m_previewColor1);
     }
 }
 

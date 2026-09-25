@@ -48,6 +48,24 @@
 			"description": "For Basic Trail Previewing (non-wave). If enabled, uses a texture that adds 2 lines to mark the outer edges of the trail's boundary. These lines loosely indicate the size of bigger trails, such as the Spike trail or the Fire trail.",
 			"default": true
 		},
+		"trail-blending": {
+			"type": "bool",
+			"name": "Trail Blending",
+			"description": "For Basic Trail Previewing (non-wave). If enabled, the trail preview will be blended with the background. If disabled, the trail will be fully opaque.",
+			"default": true
+		},
+		"color-trail": {
+			"type": "bool",
+			"name": "Color Trail Preview",
+			"description": "For Basic Trail Previewing (non-wave). If enabled, the trail preview will be colored with the secondary color of the icon. If disabled, the trail will be white.",
+			"default": true
+		},
+		"color-wave-trail": {
+			"type": "bool",
+			"name": "Color Wave Trail Preview",
+			"description": "For Wave Trail Previewing. If enabled, the trail preview will be colored with the primary color of the icon. If disabled, the trail will be white.",
+			"default": true
+		},
 		"draw-hitbox-fill": {
 			"type": "bool",
 			"name": "Draw Hitbox Fill",

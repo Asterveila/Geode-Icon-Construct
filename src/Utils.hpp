@@ -183,10 +183,11 @@ namespace UIUtils {
         menu->addChild(label);
 
         auto swatch = CCSprite::createWithSpriteFrameName("GJ_colorBtn_001.png");
+        swatch->setScale(0.55f);
         swatch->setColor(initialColor);
 
         auto button = CCMenuItemSpriteExtra::create(swatch, target, selector);
-        button->setScale(0.55f);
+        //button->setScale(0.55f);
         menu->addChild(button);
 
         menu->updateLayout();

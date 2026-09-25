@@ -12,29 +12,16 @@
 		]
 	},
 	"settings": {
+		"main-title": {
+			"type": "title",
+			"name": "Main Settings",
+			"description": "The following settings are related to the mod's main features, related to the live icon preview. Stuff like hitbox, offsets, trail, etc."
+		},
 		"update-offsets-live": {
 			"type": "bool",
 			"name": "Update On Text Change",
 			"description": "Attempts to update the Sprite Offsets anytime the Text Inputs are changed. \nToggleable in case this causes instability issues for anyone. Most notable issue is messing up the Touch Priority of the mod's popup. Installing the 'Better Touch Prio' mod is recommended in case you wanna keep this feature on.",
 			"default": true
-		},
-		"renders-path": {
-			"type": "folder",
-			"name": "Renders Folder",
-			"description": "Where to save the Icon Renders to. Defaults to this mod's config directory.",
-			"default": "{mod_config_dir}/renders"
-		},
-		"bg-color": {
-			"type": "rgba",
-			"name": "Render Background Color",
-			"description": "Defines the BG color to use for the renders. Defaults to transparent (which is best, honestly)",
-			"default": [0, 0, 0, 0]
-		},
-		"extra-swing-space": {
-			"type": "bool",
-			"name": "Render - Extra Swing Space",
-			"description": "Adds extra space to Swing Renders to make sure the Swing Fires fit inside the render, and aren't cut off.",
-			"default": false
 		},
 		"animate-swing-fires": {
 			"type": "bool",
@@ -66,11 +53,46 @@
 			"description": "For Wave Trail Previewing. If enabled, the trail preview will be colored with the primary color of the icon. If disabled, the trail will be white.",
 			"default": true
 		},
-		"draw-hitbox-fill": {
+		"hitbox-color": {
+			"type": "rgb",
+			"name": "Hitbox Preview Color",
+			"description": "Defines what color to tint the hitbox preview square with.",
+			"default": [255, 0, 0]
+		},
+		"hitbox-border-size": {
+			"name": "Hitbox Border Thickness",
+			"description": "Defines how thick the hitbox preview's border will be. Setting this to 'full' will make it a full fill instead of an outer border.",
+			"type": "string",
+			"default": "moderate",
+			"one-of": ["thin", "moderate", "thick", "full"]
+		},
+		"render-title": {
+			"type": "title",
+			"name": "Render Settings",
+			"description": "The following settings are related to the mod's Icon Rendering feature, which allows you to render icons as individual png images."
+		},
+		"renders-path": {
+			"type": "folder",
+			"name": "Renders Folder",
+			"description": "Where to save the Icon Renders to. Defaults to this mod's config directory.",
+			"default": "{mod_config_dir}/renders"
+		},
+		"bg-color": {
+			"type": "rgba",
+			"name": "Render Background Color",
+			"description": "Defines the BG color to use for the renders. Defaults to transparent (which is best, honestly)",
+			"default": [0, 0, 0, 0]
+		},
+		"extra-swing-space": {
 			"type": "bool",
-			"name": "Draw Hitbox Fill",
-			"description": "Enables drawing the hitbox fill in the Workbench Hitbox preview. \n\nIn case you're wondering why you can toggle this and not the border, it's because the border is mainly controlled via the slider in the popup.",
-			"default": true
+			"name": "Extra Swing Space",
+			"description": "Adds extra space to Swing Renders to make sure the Swing Fires fit inside the render, and aren't cut off.",
+			"default": false
+		},
+		"misc-title": {
+			"type": "title",
+			"name": "Miscellaneous Settings",
+			"description": "The following settings are related to other features of the mod, some of which don't fit any of the other categories."
 		},
 		"raw-part-names": {
 			"type": "bool",

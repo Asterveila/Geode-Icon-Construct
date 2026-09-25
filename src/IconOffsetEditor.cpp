@@ -568,7 +568,9 @@ bool IconOffsetEditorPopup::init() {
             float waveTrailBaseH = 12.2f;
 
             // main trail
-            m_waveTrailPreview = NineSlice::create("fullAreaSquare.png"_spr);
+            m_waveTrailPreview = CCLayerColor::create();
+            m_waveTrailPreview->ignoreAnchorPointForPosition(false);
+            m_waveTrailPreview->setOpacity(255);
             m_waveTrailPreview->setID("wave-trail-preview");
             m_waveTrailPreview->setAnchorPoint({1.f, 0.5f});
             m_waveTrailPreview->setContentSize({33.3f, waveTrailBaseH});
@@ -579,11 +581,13 @@ bool IconOffsetEditorPopup::init() {
             m_iconContainerNode->addChild(m_waveTrailPreview, -4);
 
             // highlight
-            m_waveTrailPreviewLighter = NineSlice::create("fullAreaSquare.png"_spr);
+            m_waveTrailPreviewLighter = CCLayerColor::create();
+            m_waveTrailPreviewLighter->ignoreAnchorPointForPosition(false);
             m_waveTrailPreviewLighter->setID("wave-trail-preview-lighter");
             m_waveTrailPreviewLighter->setAnchorPoint({1.f, 0.5f});
             m_waveTrailPreviewLighter->setContentSize({33.3f, waveTrailBaseH / 2.f});
             m_waveTrailPreviewLighter->setPosition({midContainerX, midContainerY});
+            m_waveTrailPreviewLighter->setColor({255, 255, 255});
             m_waveTrailPreviewLighter->setOpacity(100);
             m_iconContainerNode->addChild(m_waveTrailPreviewLighter, -3);
         }
@@ -641,7 +645,7 @@ bool IconOffsetEditorPopup::init() {
     hitboxOpacityContainer->setPosition({midX, 40.f});
 
     auto hitboxSlider = UIUtils::labeledSlider(
-        "Hitbox Border Opacity:",
+        "Hitbox Opacity:",
         1.0f,
         "100%",
         this,
@@ -672,12 +676,15 @@ bool IconOffsetEditorPopup::init() {
         if (m_previewPlayer->m_outlineSprite) m_previewPlayer->m_outlineSprite->setVisible(true);
     }
 
-    m_hitboxDrawNode = CCDrawNode::create();
-    m_hitboxDrawNode->setZOrder(10);
-    m_hitboxDrawNode->setVisible(false);
-    m_hitboxDrawNode->setID("hitbox-preview");
-    //if (m_currentIconType == IconType::Ship) m_hitboxDrawNode->setPosition({0.f, 10.f});
-    this->m_mainLayer->addChild(m_hitboxDrawNode);
+    std::string chosenType = fmt::format("hitboxNineslice_{}.png"_spr, Mod::get()->getSettingValue<std::string>("hitbox-border-size"));
+
+    m_hitboxPreview = NineSlice::create(chosenType.c_str());
+    m_hitboxPreview->setAnchorPoint({0.5f, 0.5f});
+    m_hitboxPreview->setID("hitbox-preview");
+    m_hitboxPreview->setVisible(m_showHitbox);
+    m_hitboxPreview->setPosition(m_iconContainerNode->getPosition());
+    m_hitboxPreview->setColor(Mod::get()->getSettingValue<cocos2d::ccColor3B>("hitbox-color"));
+    this->m_mainLayer->addChild(m_hitboxPreview, 5);
 
     drawHitbox();
 
@@ -754,7 +761,7 @@ bool IconOffsetEditorPopup::init() {
     // -----------------------
     if (m_currentIconType == IconType::Ball) {
         m_animButtonsMenu = CCMenu::create();
-        m_animButtonsMenu->setPosition({lowerMenuX, lowerMenuBaseY - 18.f});
+        m_animButtonsMenu->setPosition({lowerMenuX, lowerMenuBaseY - 25.f});
         m_animButtonsMenu->setContentSize({55.f, 40.f});
         m_animButtonsMenu->setLayout(
             RowLayout::create()
@@ -900,8 +907,9 @@ bool IconOffsetEditorPopup::init() {
     scrollFrame->setPosition({m_partScrollLayer->getPositionX() + 5.f, m_partScrollLayer->getPositionY()});
     this->m_mainLayer->addChild(scrollFrame, 2);
 
-    auto scrollFrameUnderlay = NineSlice::create("fullAreaSquare.png"_spr);
+    auto scrollFrameUnderlay = CCLayerColor::create();
     scrollFrameUnderlay->setID("scroll-frame-underlay");
+    scrollFrameUnderlay->ignoreAnchorPointForPosition(false);
     scrollFrameUnderlay->setColor({0, 0, 0});
     scrollFrameUnderlay->setOpacity(30);
     scrollFrameUnderlay->setContentSize({m_partScrollLayer->getContentSize().width + 2.f, m_partScrollLayer->getContentSize().height + 2.f});
@@ -1168,48 +1176,20 @@ void IconOffsetEditorPopup::onToggleTrail(CCObject* sender) {
 }
 
 void IconOffsetEditorPopup::drawHitbox() {
-    if (!m_hitboxDrawNode || !m_previewPlayer) return;
-    
-    m_hitboxDrawNode->clear();
-    
+    if (!m_hitboxPreview || !m_previewPlayer) return;
+
     auto hitboxSize = getHitboxSizeForIconType(m_currentIconType);
     auto playerPos = m_iconContainerNode->getPosition();
+    GLubyte strokeAlpha = static_cast<GLubyte>(m_hitboxOpacity * 255.f);
 
-    bool drawFill = Mod::get()->getSettingValue<bool>("draw-hitbox-fill");
-    
-    CCRect hitboxRect = {
-        playerPos.x - hitboxSize.width / 2.f,
-        playerPos.y - hitboxSize.height / 2.f,
-        hitboxSize.width,
-        hitboxSize.height
-    };
-    
-    ccColor4F borderColor = {1.f, 0.f, 0.f, m_hitboxOpacity};
-    ccColor4F fillColor;
-    float borderSize = 0.5f;
-
-    if (drawFill) {
-        fillColor = {1.f, 0.f, 0.f, 0.15f * m_hitboxOpacity};
-    } else {
-        fillColor = {0.f, 0.f, 0.f, 0.f};
-    }
-    
-    std::array<CCPoint, 4> vertices = {
-        CCPoint{hitboxRect.getMinX(), hitboxRect.getMinY()},
-        CCPoint{hitboxRect.getMinX(), hitboxRect.getMaxY()},
-        CCPoint{hitboxRect.getMaxX(), hitboxRect.getMaxY()},
-        CCPoint{hitboxRect.getMaxX(), hitboxRect.getMinY()}
-    };
-    
-    m_hitboxDrawNode->drawPolygon(vertices.data(), 4, fillColor, borderSize, borderColor);
+    m_hitboxPreview->setPosition(playerPos);
+    m_hitboxPreview->setContentSize(hitboxSize);
+    m_hitboxPreview->setOpacity(strokeAlpha);
 }
 
 void IconOffsetEditorPopup::onToggleHitbox(CCObject* sender) {
     m_showHitbox = !m_showHitbox;
-    
-    if (m_hitboxDrawNode) {
-        m_hitboxDrawNode->setVisible(m_showHitbox);
-    }
+    if (m_hitboxPreview) m_hitboxPreview->setVisible(m_showHitbox);
 }
 
 void IconOffsetEditorPopup::onPlayAnimation(CCObject* sender) {

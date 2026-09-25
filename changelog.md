@@ -1,8 +1,13 @@
 # v1.5.1
 - Internal code cleanup when creating the button to access the mod's popup via the Icon Garage.
+- Internal code cleanup to use CCLayerColor instead of pre-made sprites on some cases where the latter was unnecessary.
 - Fixed an issue where the normal trail would still be shown (and be out of place) when a wave icon is selected.
+- Fixed the Ball's "Spin" and "Stop" control buttons overlapping with the label under the speed slider.
 - Tweak the Popup's ScrollLayer entries to use more readable names for Robot/Spider icons instead of the full, raw frame names.
-- Added a setting to skip the simplified part names for Robot/Spider icons in case the just mentioned system fails.
+- Added a setting to skip the simplified part names for Robot/Spider icons in case the earlier mentioned system fails.
+- Rewrote Hitbox Previewing to use a NineSlice sprite instead of a CCDrawNode to fix inaccuracies and weirdness with the opacity control.
+- Added a setting to change the Hitbox Preview's colour.
+- Added a setting to pick the Hitbox Preview's Border Thickness (with one of the options being a full fill).
 
 # v1.5.0
 - **COMPLETELY REDESIGNED** the Popup UI!

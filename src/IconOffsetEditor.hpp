@@ -34,8 +34,8 @@ protected:
     PlayerFireBoostSprite* m_swingBotFire = nullptr;
 
     CCSprite* m_trailPreview = nullptr;
-    NineSlice* m_waveTrailPreview = nullptr;
-    NineSlice* m_waveTrailPreviewLighter = nullptr;
+    CCLayerColor* m_waveTrailPreview = nullptr;
+    CCLayerColor* m_waveTrailPreviewLighter = nullptr;
     bool m_showTrail = true;
 
     geode::TextInput* m_inputX = nullptr;
@@ -73,7 +73,10 @@ protected:
     CCLabelBMFont* m_iconNameLabel = nullptr;
     bool m_isRotating = false;
 
-    CCDrawNode* m_hitboxDrawNode = nullptr;
+    // -----------------------
+    // HITBOX STUFF. FUCK YOU CCDRAWNODE
+    // -----------------------
+    NineSlice* m_hitboxPreview = nullptr;
     Slider* m_hitboxOpacitySlider = nullptr;
     CCLabelBMFont* m_hitboxOpacityLabel = nullptr;
     float m_hitboxOpacity = 1.0f;

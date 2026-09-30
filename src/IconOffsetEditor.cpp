@@ -445,6 +445,16 @@ bool IconOffsetEditorPopup::init() {
     containerUnderlay->setContentSize({50.f * 4.f, 50.f * 3.f});
     this->m_mainLayer->addChild(containerUnderlay, 0);
 
+    // floor line
+    auto floorLine = CCSprite::createWithSpriteFrameName("floorLine_02_001.png");
+    floorLine->setID("floor-line");
+    floorLine->setPosition({midContainerX, m_previewPlayer->getPositionY() - 25.f / 1.6f});
+    floorLine->setScaleX(0.148f);
+    floorLine->setScaleY(0.35f);
+    floorLine->setColor({0, 0, 0});
+    floorLine->setOpacity(100);
+    m_iconContainerNode->addChild(floorLine, -5);
+
     // -----------------------
     // CUBE PREVIEW FOR RIDER GAMEMODES
     // -----------------------

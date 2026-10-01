@@ -61,7 +61,6 @@ CCSize getHitboxSizeForIconType(IconType iconType) {
     switch(iconType) {
         case IconType::Cube:
         case IconType::Ship:
-        case IconType::Ball:
         case IconType::Ufo:
         case IconType::Robot:
         case IconType::Swing:
@@ -70,6 +69,7 @@ CCSize getHitboxSizeForIconType(IconType iconType) {
         case IconType::Wave:
             return {10.f * scale, 10.f * scale};
         case IconType::Spider:
+        case IconType::Ball:
             return {27.f * scale, 27.f * scale};
         default:
             return {30.f, 30.f};

@@ -1,3 +1,7 @@
+# v1.5.2
+- Added a Floor Line preview in the Popup.
+- Fixed ball Hitbox size to be accurate to Gameplay instead of just Garage visuals.
+
 # v1.5.1
 - Internal code cleanup when creating the button to access the mod's popup via the Icon Garage.
 - Internal code cleanup to use CCLayerColor instead of pre-made sprites on some cases where the latter was unnecessary.
